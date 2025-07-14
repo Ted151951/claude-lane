@@ -270,21 +270,76 @@ function Use-Profile {
 
 function List-ProfilesAndKeys {
     Write-Host "=== Available Profiles ==="
-    if (Test-Path $ConfigFile) {
-        $content = Get-Content $ConfigFile
-        foreach ($line in $content) {
-            if ($line -match "^[a-zA-Z0-9_-]+:") {
-                $profile = $line -replace ":.*", ""
-                Write-Host "  - $profile"
+    
+    if (-not (Test-Path $ConfigFile)) {
+        Write-Host "No configuration file found." -ForegroundColor Yellow
+        Write-Host "You can use claude-lane without configuration (uses web login):" -ForegroundColor Green
+        Write-Host "  claude-lane `"Hello, how are you?`""
+        Write-Host ""
+        Write-Host "Or create a config file to use API keys:" -ForegroundColor Cyan
+        Write-Host "  1. Copy template: Copy-Item `"$env:USERPROFILE\.claude\scripts\windows\..\..\templates\config.yaml`" `"$ConfigFile`""
+        Write-Host "  2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
+        Write-Host "  3. Use API mode: claude-lane official-api `"Hello`""
+        return
+    }
+    
+    # Parse profiles from config file
+    $profiles = @()
+    $content = Get-Content $ConfigFile
+    $inEndpoints = $false
+    
+    foreach ($line in $content) {
+        $trimmed = $line.Trim()
+        if ($trimmed -eq "endpoints:") {
+            $inEndpoints = $true
+            continue
+        }
+        
+        if ($inEndpoints -and $line -match "^  ([a-zA-Z0-9_-]+):") {
+            $profileName = $Matches[1]
+            
+            # Try to get the key_ref for this profile
+            $keyRef = ""
+            $profileFound = $false
+            $inThisProfile = $false
+            
+            foreach ($configLine in $content) {
+                $configTrimmed = $configLine.Trim()
+                if ($configTrimmed -eq "${profileName}:") {
+                    $inThisProfile = $true
+                    continue
+                }
+                if ($inThisProfile -and $configLine -match "^  [a-zA-Z0-9_-]+:" -and $configTrimmed -ne "${profileName}:") {
+                    $inThisProfile = $false
+                }
+                if ($inThisProfile -and $configLine -match "^    key_ref:\s*`"?([^`"]+)`"?") {
+                    $keyRef = $Matches[1]
+                    break
+                }
+            }
+            
+            # Check if the key exists
+            $hasKey = $false
+            if ($keyRef) {
+                $testKey = Call-Keystore @("get", $keyRef) 2>$null
+                $hasKey = ($LASTEXITCODE -eq 0)
+            }
+            
+            $statusIcon = if ($hasKey) { "✅" } else { "❌" }
+            $statusText = if ($hasKey) { "has key" } else { "no key" }
+            
+            Write-Host "  $statusIcon $profileName ($statusText)"
+            
+            if (-not $hasKey -and $keyRef) {
+                Write-Host "      To add key: claude-lane set-key $keyRef sk-your-api-key" -ForegroundColor Gray
             }
         }
-    } else {
-        Write-Host "No configuration file found"
     }
     
     Write-Host ""
-    Write-Host "=== Stored Keys ==="
-    Call-Keystore @("list")
+    Write-Host "=== Usage ==="
+    Write-Host "Without config (web login): claude-lane `"Hello`"" -ForegroundColor Green
+    Write-Host "With API profile: claude-lane profile-name `"Hello`"" -ForegroundColor Cyan
 }
 
 function Parse-Arguments {
