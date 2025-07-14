@@ -425,47 +425,37 @@ function Parse-Arguments {
     Use-Profile $profile $claudeArgs
 }
 
-# Main entry point
-function Main {
-    param([string[]]$Args)
-    
-    # Debug: Show what arguments we received
-    Write-Host "DEBUG: Received $($Args.Count) arguments: $($Args -join ', ')" -ForegroundColor Magenta
-    
-    # Handle special case of no arguments
-    if ($Args.Count -eq 0) {
-        # If no config file, use web login directly
-        if (-not (Test-Path $ConfigFile)) {
-            Use-WebLogin @()
-        } else {
-            $lastProfile = Get-CurrentProfile
-            # Check if the profile exists and has a key before using it
-            if (Test-ValidProfile $lastProfile) {
-                $config = Parse-YamlProfile $lastProfile
-                $testKey = Call-Keystore @("get", $config.KeyRef) 2>$null
-                if ($LASTEXITCODE -eq 0) {
-                    # Profile has a valid key, use it
-                    Use-Profile $lastProfile
-                } else {
-                    # Profile exists but no key, show helpful message
-                    Write-Host "Profile '$lastProfile' is configured but missing API key." -ForegroundColor Yellow
-                    Write-Host "To set up the key: claude-lane set-key $($config.KeyRef) sk-your-api-key"
-                    Write-Host "Or use web login: claude-lane (without profile name)"
-                    Write-Host ""
-                    Use-WebLogin @()
-                }
+
+# Run main function directly with script args
+# Handle special case of no arguments
+if ($args.Count -eq 0) {
+    # If no config file, use web login directly
+    if (-not (Test-Path $ConfigFile)) {
+        Use-WebLogin @()
+    } else {
+        $lastProfile = Get-CurrentProfile
+        # Check if the profile exists and has a key before using it
+        if (Test-ValidProfile $lastProfile) {
+            $config = Parse-YamlProfile $lastProfile
+            $testKey = Call-Keystore @("get", $config.KeyRef) 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                # Profile has a valid key, use it
+                Use-Profile $lastProfile
             } else {
-                # Invalid profile, fall back to web login
-                Write-Host "Last used profile '$lastProfile' not found in config." -ForegroundColor Yellow
+                # Profile exists but no key, show helpful message
+                Write-Host "Profile '$lastProfile' is configured but missing API key." -ForegroundColor Yellow
+                Write-Host "To set up the key: claude-lane set-key $($config.KeyRef) sk-your-api-key"
+                Write-Host "Or use web login: claude-lane (without profile name)"
+                Write-Host ""
                 Use-WebLogin @()
             }
+        } else {
+            # Invalid profile, fall back to web login
+            Write-Host "Last used profile '$lastProfile' not found in config." -ForegroundColor Yellow
+            Use-WebLogin @()
         }
-        return
     }
-    
-    # Parse and execute
-    Parse-Arguments $Args
+} else {
+    # Parse and execute with arguments
+    Parse-Arguments $args
 }
-
-# Run main function
-Main @args
