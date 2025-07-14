@@ -8,23 +8,37 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 CONFIG_DIR="$HOME/.claude"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
+LAST_PROFILE_FILE="$CONFIG_DIR/last_profile"
+DEFAULT_PROFILE="official"
+
+# Global flags
+ENV_ONLY=false
+NO_RUN=false
+INTERACTIVE=false
 
 show_usage() {
     echo "claude-lane - Secure Claude API endpoint switcher"
     echo ""
     echo "Usage:"
-    echo "  claude-lane <profile>           - Use the specified profile to call Claude API"
-    echo "  claude-lane set-key <ref> <key> - Store an API key securely"
-    echo "  claude-lane list                - List available profiles and stored keys"
-    echo "  claude-lane help                - Show this help message"
+    echo "  claude-lane [message]               - Use last profile (or official) and run claude"
+    echo "  claude-lane <profile> [message]     - Switch to profile and run claude"
+    echo "  claude-lane set-key <ref> <key>     - Store an API key securely"
+    echo "  claude-lane list                    - List available profiles and stored keys"
+    echo "  claude-lane status                  - Show current configuration status"
+    echo "  claude-lane --reset                 - Reset to official profile"
+    echo "  claude-lane --env-only [profile]    - Only set environment variables"
+    echo "  claude-lane help                    - Show this help message"
     echo ""
     echo "Examples:"
+    echo "  claude-lane \"Hello, how are you?\"    - Quick chat with last/default profile"
+    echo "  claude-lane official \"Write a poem\"  - Use official API to write a poem"
     echo "  claude-lane set-key official sk-ant-api03-..."
-    echo "  claude-lane official"
-    echo "  claude-lane proxy"
+    echo "  claude-lane proxy                   - Switch to proxy and run claude interactively"
+    echo "  claude-lane --env-only official     - Only set environment, don't run claude"
     echo ""
     echo "Configuration:"
     echo "  Config file: $CONFIG_FILE"
+    echo "  Last profile: $LAST_PROFILE_FILE"
     echo "  Keys stored using OS-native secure storage"
 }
 
@@ -90,6 +104,55 @@ ensure_config_dir() {
     fi
 }
 
+save_last_profile() {
+    local profile="$1"
+    echo "$profile" > "$LAST_PROFILE_FILE"
+}
+
+get_last_profile() {
+    if [[ -f "$LAST_PROFILE_FILE" ]]; then
+        cat "$LAST_PROFILE_FILE"
+    else
+        echo "$DEFAULT_PROFILE"
+    fi
+}
+
+get_current_profile() {
+    # Try to determine current profile from environment or last used
+    if [[ -n "${CLAUDE_LANE_PROFILE:-}" ]]; then
+        echo "$CLAUDE_LANE_PROFILE"
+    else
+        get_last_profile
+    fi
+}
+
+show_status() {
+    echo "=== claude-lane Status ==="
+    echo "Config file: $CONFIG_FILE"
+    echo "Last profile file: $LAST_PROFILE_FILE"
+    echo ""
+    
+    local current_profile="$(get_current_profile)"
+    echo "Current/Last profile: $current_profile"
+    
+    if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+        echo "Environment: ANTHROPIC_API_KEY is set"
+        echo "Environment: ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-<not set>}"
+    else
+        echo "Environment: No ANTHROPIC_API_KEY set"
+    fi
+    
+    echo ""
+    if command -v claude >/dev/null 2>&1; then
+        echo "Claude CLI: Available ($(which claude))"
+    else
+        echo "Claude CLI: Not found in PATH"
+    fi
+    
+    echo ""
+    list_profiles_and_keys
+}
+
 parse_yaml() {
     local file="$1"
     local profile="$2"
@@ -144,6 +207,7 @@ parse_yaml() {
 
 use_profile() {
     local profile="$1"
+    shift # Remove profile from arguments, rest are claude arguments
     
     if [[ -z "$profile" ]]; then
         echo "Error: Profile name required" >&2
@@ -167,22 +231,49 @@ use_profile() {
     # Set environment variables for Claude CLI
     export ANTHROPIC_API_KEY="$api_key"
     export ANTHROPIC_BASE_URL="$base_url"
+    export CLAUDE_LANE_PROFILE="$profile"
+    
+    # Save as last used profile
+    ensure_config_dir
+    save_last_profile "$profile"
     
     echo "Switched to profile '$profile'"
     echo "Base URL: $base_url"
     echo "Using key: $key_ref"
     
-    # If claude command exists, you could auto-run it here
-    # For now, just export the environment variables
-    if command -v claude >/dev/null 2>&1; then
-        echo ""
-        echo "Environment configured. You can now use the 'claude' command."
-        echo "Example: claude 'Hello, how are you?'"
-    else
+    # If ENV_ONLY flag is set, just set environment and exit
+    if [[ "$ENV_ONLY" == true ]]; then
         echo ""
         echo "Environment variables set:"
         echo "  ANTHROPIC_API_KEY=***"
         echo "  ANTHROPIC_BASE_URL=$base_url"
+        echo "  CLAUDE_LANE_PROFILE=$profile"
+        return 0
+    fi
+    
+    # Auto-run claude if available
+    if command -v claude >/dev/null 2>&1; then
+        echo ""
+        if [[ $# -gt 0 ]]; then
+            # Run claude with provided arguments
+            echo "Running: claude $*"
+            exec claude "$@"
+        else
+            # Run claude interactively
+            echo "Running claude interactively..."
+            exec claude
+        fi
+    else
+        echo ""
+        echo "Claude CLI not found. Environment variables set:"
+        echo "  ANTHROPIC_API_KEY=***"
+        echo "  ANTHROPIC_BASE_URL=$base_url"
+        echo ""
+        echo "To install Claude CLI, visit: https://github.com/anthropics/claude-cli"
+        if [[ $# -gt 0 ]]; then
+            echo ""
+            echo "You wanted to run: claude $*"
+        fi
     fi
 }
 
@@ -200,25 +291,97 @@ list_profiles_and_keys() {
     call_keystore list
 }
 
-# Main command dispatch
-case "${1:-}" in
-    "set-key")
-        if [[ $# -ne 3 ]]; then
-            echo "Error: 'set-key' requires key_ref and api_key arguments" >&2
-            show_usage
-            exit 1
-        fi
-        ensure_config_dir
-        call_keystore set "$2" "$3"
-        ;;
-    "list")
-        list_profiles_and_keys
-        ;;
-    "help"|"-h"|"--help"|"")
-        show_usage
-        ;;
-    *)
-        # Assume it's a profile name
-        use_profile "$1"
-        ;;
-esac
+is_valid_profile() {
+    local profile="$1"
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        return 1
+    fi
+    grep -q "^[[:space:]]*$profile[[:space:]]*:" "$CONFIG_FILE"
+}
+
+# Parse command line arguments
+parse_args() {
+    local profile=""
+    local claude_args=()
+    local i=1
+    
+    while [[ $i -le $# ]]; do
+        local arg="${!i}"
+        case "$arg" in
+            "--env-only")
+                ENV_ONLY=true
+                ((i++))
+                ;;
+            "--reset")
+                profile="$DEFAULT_PROFILE"
+                ((i++))
+                ;;
+            "--help"|"-h"|"help")
+                show_usage
+                exit 0
+                ;;
+            "--version")
+                echo "claude-lane v1.1.0"
+                exit 0
+                ;;
+            "set-key")
+                if [[ $# -ne 3 ]]; then
+                    echo "Error: 'set-key' requires key_ref and api_key arguments" >&2
+                    show_usage
+                    exit 1
+                fi
+                ensure_config_dir
+                call_keystore set "${@:2:2}"
+                exit 0
+                ;;
+            "list")
+                list_profiles_and_keys
+                exit 0
+                ;;
+            "status")
+                show_status
+                exit 0
+                ;;
+            -*)
+                echo "Error: Unknown option '$arg'" >&2
+                show_usage
+                exit 1
+                ;;
+            *)
+                # Check if this is a known profile
+                if [[ -z "$profile" ]] && is_valid_profile "$arg"; then
+                    profile="$arg"
+                    ((i++))
+                else
+                    # This and all remaining args are for claude
+                    claude_args=("${@:$i}")
+                    break
+                fi
+                ;;
+        esac
+    done
+    
+    # If no profile specified, use last/default
+    if [[ -z "$profile" ]]; then
+        profile="$(get_current_profile)"
+    fi
+    
+    # Use the profile and pass remaining args to claude
+    use_profile "$profile" "${claude_args[@]}"
+}
+
+# Main entry point
+main() {
+    # Handle special case of no arguments
+    if [[ $# -eq 0 ]]; then
+        local last_profile="$(get_current_profile)"
+        use_profile "$last_profile"
+        exit 0
+    fi
+    
+    # Parse and execute
+    parse_args "$@"
+}
+
+# Run main function
+main "$@"

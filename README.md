@@ -48,19 +48,33 @@ claude-lane set-key official sk-ant-api03-你的官方密钥
 claude-lane set-key proxy 你的代理密钥
 ```
 
-3. **在端点间切换**:
+3. **智能使用**:
 ```bash
-claude-lane official  # 使用官方 Anthropic API
-claude-lane proxy     # 使用代理服务
+# 快速对话（自动使用上次/默认配置）
+claude-lane "你好，今天天气怎么样？"
+
+# 指定配置并对话
+claude-lane official "写一首诗"
+
+# 交互模式
+claude-lane                    # 使用上次配置
+claude-lane proxy              # 使用指定配置
+
+# 仅设置环境变量
+claude-lane --env-only official
 ```
 
 ## 命令说明
 
 | 命令 | 说明 |
 |---------|-------------|
-| `claude-lane <配置名>` | 切换到指定的 API 端点配置 |
+| `claude-lane [消息]` | 使用上次/默认配置运行 Claude |
+| `claude-lane <配置名> [消息]` | 切换配置并运行 Claude |
 | `claude-lane set-key <引用名> <密钥>` | 安全存储 API 密钥 |
 | `claude-lane list` | 列出可用配置和已存储的密钥 |
+| `claude-lane status` | 显示当前配置状态 |
+| `claude-lane --reset` | 重置为 official 配置 |
+| `claude-lane --env-only [配置]` | 仅设置环境变量 |
 | `claude-lane help` | 显示帮助信息 |
 
 ## 平台特定设置
@@ -259,19 +273,33 @@ claude-lane set-key official sk-ant-api03-your-official-key
 claude-lane set-key proxy your-proxy-api-key
 ```
 
-3. **Switch between endpoints**:
+3. **Smart usage**:
 ```bash
-claude-lane official  # Use official Anthropic API
-claude-lane proxy     # Use your proxy service
+# Quick chat (auto-uses last/default profile)
+claude-lane "Hello, how are you today?"
+
+# Specify profile and chat
+claude-lane official "Write a poem"
+
+# Interactive mode
+claude-lane                    # Use last profile
+claude-lane proxy              # Use specified profile
+
+# Environment-only mode
+claude-lane --env-only official
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `claude-lane <profile>` | Switch to the specified API endpoint profile |
+| `claude-lane [message]` | Use last/default profile and run Claude |
+| `claude-lane <profile> [message]` | Switch to profile and run Claude |
 | `claude-lane set-key <ref> <key>` | Store an API key securely |
 | `claude-lane list` | List available profiles and stored keys |
+| `claude-lane status` | Show current configuration status |
+| `claude-lane --reset` | Reset to official profile |
+| `claude-lane --env-only [profile]` | Only set environment variables |
 | `claude-lane help` | Show help information |
 
 ## Platform-Specific Setup

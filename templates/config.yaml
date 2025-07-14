@@ -24,13 +24,22 @@ endpoints:
     base_url: "http://localhost:8080/v1"
     key_ref: "local"
 
-# Usage:
+# Usage (v1.1.0+):
 # 1. Store your API keys securely:
 #    claude-lane set-key official sk-ant-api03-...
 #    claude-lane set-key proxy your-proxy-key
 #    claude-lane set-key kimi your-kimi-key
 #
-# 2. Switch between endpoints:
-#    claude-lane official
-#    claude-lane proxy
-#    claude-lane kimi
+# 2. Quick chat (uses last/default profile):
+#    claude-lane "Hello, how are you?"
+#    claude-lane                              # Interactive mode
+#
+# 3. Switch profiles and chat:
+#    claude-lane official "Write a poem"
+#    claude-lane proxy                        # Interactive mode with proxy
+#
+# 4. Environment-only mode:
+#    claude-lane --env-only official          # Set env vars only
+#
+# 5. Check status:
+#    claude-lane status                       # Show current configuration
