@@ -127,6 +127,7 @@ function Parse-YamlProfile {
     }
     
     $content = Get-Content $ConfigFile
+    $inEndpoints = $false
     $inProfile = $false
     $baseUrl = ""
     $keyRef = ""
@@ -135,22 +136,32 @@ function Parse-YamlProfile {
         $line = $line.Trim()
         if ($line -eq "" -or $line.StartsWith("#")) { continue }
         
-        if ($line -eq "${Profile}:") {
-            $inProfile = $true
+        # Look for endpoints: section
+        if ($line -eq "endpoints:") {
+            $inEndpoints = $true
             continue
         }
         
-        if ($line -match "^[a-zA-Z0-9_-]+:" -and $line -ne "${Profile}:") {
-            $inProfile = $false
-            continue
-        }
-        
-        if ($inProfile) {
-            if ($line -match "base_url:\s*`"?([^`"]+)`"?") {
-                $baseUrl = $Matches[1]
+        # If we're in endpoints section, look for our profile
+        if ($inEndpoints) {
+            # Check if this line starts a new profile
+            if ($line -match "^[a-zA-Z0-9_-]+:") {
+                if ($line -eq "${Profile}:") {
+                    $inProfile = $true
+                } else {
+                    $inProfile = $false
+                }
+                continue
             }
-            elseif ($line -match "key_ref:\s*`"?([^`"]+)`"?") {
-                $keyRef = $Matches[1]
+            
+            # If we're in the target profile, parse the properties
+            if ($inProfile) {
+                if ($line -match "base_url:\s*`"?([^`"]+)`"?") {
+                    $baseUrl = $Matches[1]
+                }
+                elseif ($line -match "key_ref:\s*`"?([^`"]+)`"?") {
+                    $keyRef = $Matches[1]
+                }
             }
         }
     }
