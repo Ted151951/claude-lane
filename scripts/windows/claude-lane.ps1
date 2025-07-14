@@ -8,8 +8,17 @@
 $ConfigDir = "$env:USERPROFILE\.claude"
 $ConfigFile = "$ConfigDir\config.yaml"
 $LastProfileFile = "$ConfigDir\last_profile"
-$KeystoreScript = "$env:USERPROFILE\.claude\scripts\windows\keystore.ps1"
 $DefaultProfile = "official-api"
+
+# Detect if we're running from project directory or installed location
+$ScriptDir = $PSScriptRoot
+if (Test-Path "$ScriptDir\keystore.ps1") {
+    # Running from project directory
+    $KeystoreScript = "$ScriptDir\keystore.ps1"
+} else {
+    # Running from installed location
+    $KeystoreScript = "$env:USERPROFILE\.claude\scripts\windows\keystore.ps1"
+}
 
 # Global flags
 $script:EnvOnly = $false
