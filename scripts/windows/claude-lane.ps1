@@ -356,6 +356,9 @@ function List-ProfilesAndKeys {
 function Parse-Arguments {
     param([string[]]$Args)
     
+    # Debug: Show what Parse-Arguments received
+    Write-Host "DEBUG: Parse-Arguments received $($Args.Count) arguments: '$($Args -join "', '")'" -ForegroundColor Cyan
+    
     $profile = ""
     $claudeArgs = @()
     $i = 0
