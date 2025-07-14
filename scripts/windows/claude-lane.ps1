@@ -428,6 +428,9 @@ function Parse-Arguments {
 function Main {
     param([string[]]$Args)
     
+    # Debug: Show what arguments we received
+    Write-Host "DEBUG: Received $($Args.Count) arguments: $($Args -join ', ')" -ForegroundColor Magenta
+    
     # Handle special case of no arguments
     if ($Args.Count -eq 0) {
         # If no config file, use web login directly
