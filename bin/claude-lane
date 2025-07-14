@@ -357,10 +357,10 @@ list_profiles_and_keys() {
         local status_icon=""
         local status_text=""
         if [[ "$has_key" == true ]]; then
-            status_icon="✅"
+            status_icon="[OK]"
             status_text="has key"
         else
-            status_icon="❌"
+            status_icon="[--]"
             status_text="no key"
         fi
         

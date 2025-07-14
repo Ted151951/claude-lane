@@ -325,7 +325,7 @@ function List-ProfilesAndKeys {
                 $hasKey = ($LASTEXITCODE -eq 0)
             }
             
-            $statusIcon = if ($hasKey) { "✅" } else { "❌" }
+            $statusIcon = if ($hasKey) { "[OK]" } else { "[--]" }
             $statusText = if ($hasKey) { "has key" } else { "no key" }
             
             Write-Host "  $statusIcon $profileName ($statusText)"
