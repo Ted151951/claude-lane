@@ -1,10 +1,7 @@
 # claude-lane PowerShell Implementation for Windows
 # Provides the same functionality as the bash version
 
-param(
-    [Parameter(ValueFromRemainingArguments=$true)]
-    [string[]]$Arguments
-)
+# Use $args directly instead of param block for better compatibility
 
 # Configuration
 $ConfigDir = "$env:USERPROFILE\.claude"
@@ -467,4 +464,4 @@ function Main {
 }
 
 # Run main function
-Main $Arguments
+Main $args
