@@ -317,13 +317,15 @@ list_profiles_and_keys() {
     
     if [[ ! -f "$CONFIG_FILE" ]]; then
         echo "No configuration file found."
-        echo "You can use claude-lane without configuration (uses web login):"
-        echo "  claude-lane \"Hello, how are you?\""
         echo ""
-        echo "Or create a config file to use API keys:"
-        echo "  1. Copy template: cp ~/.claude/scripts/*/templates/config.yaml ~/.claude/config.yaml"
-        echo "  2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
-        echo "  3. Use API mode: claude-lane official-api \"Hello\""
+        echo "Available options:"
+        echo "  • Run without config (web login): claude-lane"
+        echo "    (just type 'claude-lane' without parameters to start chatting)"
+        echo ""
+        echo "  • Set up API keys for advanced usage:"
+        echo "    1. Copy template: cp ~/.claude/scripts/*/templates/config.yaml ~/.claude/config.yaml"
+        echo "    2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
+        echo "    3. Use API mode: claude-lane official-api \"Hello\""
         return
     fi
     

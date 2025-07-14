@@ -281,13 +281,15 @@ function List-ProfilesAndKeys {
     
     if (-not (Test-Path $ConfigFile)) {
         Write-Host "No configuration file found." -ForegroundColor Yellow
-        Write-Host "You can use claude-lane without configuration (uses web login):" -ForegroundColor Green
-        Write-Host "  claude-lane `"Hello, how are you?`""
         Write-Host ""
-        Write-Host "Or create a config file to use API keys:" -ForegroundColor Cyan
-        Write-Host "  1. Copy template: Copy-Item `"$env:USERPROFILE\.claude\scripts\windows\..\..\templates\config.yaml`" `"$ConfigFile`""
-        Write-Host "  2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
-        Write-Host "  3. Use API mode: claude-lane official-api `"Hello`""
+        Write-Host "Available options:" -ForegroundColor Green
+        Write-Host "  • Run without config (web login): claude-lane" -ForegroundColor Cyan
+        Write-Host "    (just type 'claude-lane' without parameters to start chatting)"
+        Write-Host ""
+        Write-Host "  • Set up API keys for advanced usage:" -ForegroundColor Cyan
+        Write-Host "    1. Copy template: Copy-Item `"$env:USERPROFILE\.claude\scripts\windows\..\..\templates\config.yaml`" `"$ConfigFile`""
+        Write-Host "    2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
+        Write-Host "    3. Use API mode: claude-lane official-api `"Hello`""
         return
     }
     
