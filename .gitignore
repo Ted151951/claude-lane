@@ -54,3 +54,9 @@ test-keys/
 
 # Local configuration overrides
 config.local.yaml
+
+# Design and development documents (private)
+prompt.md
+*.prompt.md
+design-docs/
+internal-docs/
