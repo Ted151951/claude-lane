@@ -1,0 +1,36 @@
+# claude-lane configuration file
+# Place this file at ~/.claude/config.yaml
+
+# Define your API endpoints here
+# Each profile needs a base_url and key_ref
+endpoints:
+  # Official Anthropic API
+  official:
+    base_url: "https://api.anthropic.com"
+    key_ref: "official"
+  
+  # Example proxy/relay service
+  proxy:
+    base_url: "https://your-proxy.example.com/v1"
+    key_ref: "proxy"
+  
+  # Example alternative service (like Kimi)
+  kimi:
+    base_url: "https://api.moonshot.cn/v1"
+    key_ref: "kimi"
+  
+  # Local development server
+  local:
+    base_url: "http://localhost:8080/v1"
+    key_ref: "local"
+
+# Usage:
+# 1. Store your API keys securely:
+#    claude-lane set-key official sk-ant-api03-...
+#    claude-lane set-key proxy your-proxy-key
+#    claude-lane set-key kimi your-kimi-key
+#
+# 2. Switch between endpoints:
+#    claude-lane official
+#    claude-lane proxy
+#    claude-lane kimi

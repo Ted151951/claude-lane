@@ -1,0 +1,224 @@
+#!/bin/bash
+# claude-lane: Unified cross-platform API switching tool
+# Securely switch between different Claude API endpoints
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CONFIG_DIR="$HOME/.claude"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
+
+show_usage() {
+    echo "claude-lane - Secure Claude API endpoint switcher"
+    echo ""
+    echo "Usage:"
+    echo "  claude-lane <profile>           - Use the specified profile to call Claude API"
+    echo "  claude-lane set-key <ref> <key> - Store an API key securely"
+    echo "  claude-lane list                - List available profiles and stored keys"
+    echo "  claude-lane help                - Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  claude-lane set-key official sk-ant-api03-..."
+    echo "  claude-lane official"
+    echo "  claude-lane proxy"
+    echo ""
+    echo "Configuration:"
+    echo "  Config file: $CONFIG_FILE"
+    echo "  Keys stored using OS-native secure storage"
+}
+
+detect_platform() {
+    case "$(uname -s)" in
+        Darwin*)
+            echo "macos"
+            ;;
+        Linux*)
+            echo "linux"
+            ;;
+        CYGWIN*|MINGW*|MSYS*)
+            echo "windows"
+            ;;
+        *)
+            echo "unsupported"
+            ;;
+    esac
+}
+
+get_keystore_script() {
+    local platform="$1"
+    case "$platform" in
+        windows)
+            echo "$PROJECT_ROOT/scripts/windows/keystore.ps1"
+            ;;
+        macos)
+            echo "$PROJECT_ROOT/scripts/macos/keystore.sh"
+            ;;
+        linux)
+            echo "$PROJECT_ROOT/scripts/linux/keystore.sh"
+            ;;
+        *)
+            echo "Error: Unsupported platform: $platform" >&2
+            exit 1
+            ;;
+    esac
+}
+
+call_keystore() {
+    local platform="$(detect_platform)"
+    local script="$(get_keystore_script "$platform")"
+    
+    if [[ ! -f "$script" ]]; then
+        echo "Error: Keystore script not found: $script" >&2
+        exit 1
+    fi
+    
+    case "$platform" in
+        windows)
+            powershell.exe -ExecutionPolicy Bypass -File "$script" "$@"
+            ;;
+        *)
+            chmod +x "$script" 2>/dev/null || true
+            "$script" "$@"
+            ;;
+    esac
+}
+
+ensure_config_dir() {
+    if [[ ! -d "$CONFIG_DIR" ]]; then
+        mkdir -p "$CONFIG_DIR"
+    fi
+}
+
+parse_yaml() {
+    local file="$1"
+    local profile="$2"
+    
+    if [[ ! -f "$file" ]]; then
+        echo "Error: Config file not found: $file" >&2
+        echo "Run 'claude-lane help' for setup instructions" >&2
+        exit 1
+    fi
+    
+    # Simple YAML parser for our specific format
+    local in_profile=false
+    local base_url=""
+    local key_ref=""
+    
+    while IFS= read -r line; do
+        # Remove leading/trailing whitespace
+        line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+        
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+        
+        # Check if we're entering the target profile
+        if [[ "$line" =~ ^"$profile": ]]; then
+            in_profile=true
+            continue
+        fi
+        
+        # Check if we're entering a different profile
+        if [[ "$line" =~ ^[[:alnum:]_-]+: ]] && [[ "$line" != "$profile:"* ]]; then
+            in_profile=false
+            continue
+        fi
+        
+        # Parse profile properties
+        if [[ "$in_profile" == true ]]; then
+            if [[ "$line" =~ ^base_url:[[:space:]]*\"?([^\"]+)\"? ]]; then
+                base_url="${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^key_ref:[[:space:]]*\"?([^\"]+)\"? ]]; then
+                key_ref="${BASH_REMATCH[1]}"
+            fi
+        fi
+    done < "$file"
+    
+    if [[ -z "$base_url" || -z "$key_ref" ]]; then
+        echo "Error: Profile '$profile' not found or incomplete in config" >&2
+        exit 1
+    fi
+    
+    echo "$base_url|$key_ref"
+}
+
+use_profile() {
+    local profile="$1"
+    
+    if [[ -z "$profile" ]]; then
+        echo "Error: Profile name required" >&2
+        show_usage
+        exit 1
+    fi
+    
+    # Parse configuration
+    local config_data="$(parse_yaml "$CONFIG_FILE" "$profile")"
+    local base_url="$(echo "$config_data" | cut -d'|' -f1)"
+    local key_ref="$(echo "$config_data" | cut -d'|' -f2)"
+    
+    # Retrieve API key
+    local api_key="$(call_keystore get "$key_ref")"
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to retrieve API key for '$key_ref'" >&2
+        echo "Use 'claude-lane set-key $key_ref <your-api-key>' to store the key" >&2
+        exit 1
+    fi
+    
+    # Set environment variables for Claude CLI
+    export ANTHROPIC_API_KEY="$api_key"
+    export ANTHROPIC_BASE_URL="$base_url"
+    
+    echo "Switched to profile '$profile'"
+    echo "Base URL: $base_url"
+    echo "Using key: $key_ref"
+    
+    # If claude command exists, you could auto-run it here
+    # For now, just export the environment variables
+    if command -v claude >/dev/null 2>&1; then
+        echo ""
+        echo "Environment configured. You can now use the 'claude' command."
+        echo "Example: claude 'Hello, how are you?'"
+    else
+        echo ""
+        echo "Environment variables set:"
+        echo "  ANTHROPIC_API_KEY=***"
+        echo "  ANTHROPIC_BASE_URL=$base_url"
+    fi
+}
+
+list_profiles_and_keys() {
+    echo "=== Available Profiles ==="
+    if [[ -f "$CONFIG_FILE" ]]; then
+        grep "^[[:alnum:]_-]*:" "$CONFIG_FILE" | sed 's/:.*//;s/^/  - /'
+    else
+        echo "No configuration file found"
+        echo "Create $CONFIG_FILE to define profiles"
+    fi
+    
+    echo ""
+    echo "=== Stored Keys ==="
+    call_keystore list
+}
+
+# Main command dispatch
+case "${1:-}" in
+    "set-key")
+        if [[ $# -ne 3 ]]; then
+            echo "Error: 'set-key' requires key_ref and api_key arguments" >&2
+            show_usage
+            exit 1
+        fi
+        ensure_config_dir
+        call_keystore set "$2" "$3"
+        ;;
+    "list")
+        list_profiles_and_keys
+        ;;
+    "help"|"-h"|"--help"|"")
+        show_usage
+        ;;
+    *)
+        # Assume it's a profile name
+        use_profile "$1"
+        ;;
+esac
