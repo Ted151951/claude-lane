@@ -465,7 +465,35 @@ main() {
             use_profile "web"  # Will be handled as web login in use_profile
         else
             local last_profile="$(get_current_profile)"
-            use_profile "$last_profile"
+            # Check if the profile exists and has a key before using it
+            if is_valid_profile "$last_profile"; then
+                local config_data="$(parse_yaml "$CONFIG_FILE" "$last_profile" 2>/dev/null)"
+                if [[ $? -eq 0 ]]; then
+                    local key_ref="$(echo "$config_data" | cut -d'|' -f2)"
+                    if call_keystore get "$key_ref" >/dev/null 2>&1; then
+                        # Profile has a valid key, use it
+                        use_profile "$last_profile"
+                    else
+                        # Profile exists but no key, show helpful message
+                        echo "Profile '$last_profile' is configured but missing API key."
+                        echo "To set up the key: claude-lane set-key $key_ref sk-your-api-key"
+                        echo "Or use web login: claude-lane (without profile name)"
+                        echo ""
+                        echo "Using Claude CLI's built-in web login instead..."
+                        use_profile "web"
+                    fi
+                else
+                    # Invalid profile, fall back to web login
+                    echo "Last used profile '$last_profile' not found in config."
+                    echo "Using Claude CLI's built-in web login..."
+                    use_profile "web"
+                fi
+            else
+                # Invalid profile, fall back to web login
+                echo "Last used profile '$last_profile' not found in config."
+                echo "Using Claude CLI's built-in web login..."
+                use_profile "web"
+            fi
         fi
         exit 0
     fi
