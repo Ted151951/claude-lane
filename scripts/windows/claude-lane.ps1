@@ -460,5 +460,5 @@ if ($args.Count -eq 0) {
     }
 } else {
     # Parse and execute with arguments
-    Parse-Arguments $args
+    Parse-Arguments @args
 }
