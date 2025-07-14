@@ -353,6 +353,8 @@ function List-ProfilesAndKeys {
 function Parse-Arguments {
     param([string[]]$Args)
     
+    Write-Host "DEBUG: Parse-Arguments received $($Args.Count) args: '$($Args -join "', '")'" -ForegroundColor Cyan
+    
     $profile = ""
     $claudeArgs = @()
     $i = 0
@@ -454,9 +456,11 @@ if ($args.Count -eq 0) {
     }
 } else {
     # Parse and execute with arguments - create proper array for function call
+    Write-Host "DEBUG: Script has $($args.Count) args: '$($args -join "', '")'" -ForegroundColor Red
     $argumentArray = @()
     for ($i = 0; $i -lt $args.Count; $i++) {
         $argumentArray += $args[$i]
     }
+    Write-Host "DEBUG: Constructed array has $($argumentArray.Count) items: '$($argumentArray -join "', '")'" -ForegroundColor Red
     Parse-Arguments -Args $argumentArray
 }
