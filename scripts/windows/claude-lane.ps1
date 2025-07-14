@@ -3,6 +3,10 @@
 
 # Use $args directly instead of param block for better compatibility
 
+# Debug: Show raw $args
+Write-Host "DEBUG: Raw args count: $($args.Count)" -ForegroundColor Red
+Write-Host "DEBUG: Raw args content: '$($args -join "', '")'" -ForegroundColor Red
+
 # Configuration
 $ConfigDir = "$env:USERPROFILE\.claude"
 $ConfigFile = "$ConfigDir\config.yaml"

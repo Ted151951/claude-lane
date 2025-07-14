@@ -109,7 +109,7 @@ set "PROJECT_ROOT=%SCRIPT_DIR%.."
 set "CONFIG_DIR=%USERPROFILE%\.claude"
 
 rem Call the PowerShell script with all arguments
-powershell.exe -ExecutionPolicy Bypass -File "%USERPROFILE%\.claude\scripts\windows\claude-lane.ps1" %*
+powershell.exe -ExecutionPolicy Bypass -Command "& '%USERPROFILE%\.claude\scripts\windows\claude-lane.ps1' %*"
 "@
     
     Set-Content -Path "$InstallDir\claude-lane.bat" -Value $mainScript
