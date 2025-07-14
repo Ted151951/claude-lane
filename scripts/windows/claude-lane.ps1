@@ -133,20 +133,20 @@ function Parse-YamlProfile {
     $keyRef = ""
     
     foreach ($line in $content) {
-        $line = $line.Trim()
-        if ($line -eq "" -or $line.StartsWith("#")) { continue }
+        $trimmedLine = $line.Trim()
+        if ($trimmedLine -eq "" -or $trimmedLine.StartsWith("#")) { continue }
         
         # Look for endpoints: section
-        if ($line -eq "endpoints:") {
+        if ($trimmedLine -eq "endpoints:") {
             $inEndpoints = $true
             continue
         }
         
         # If we're in endpoints section, look for our profile
         if ($inEndpoints) {
-            # Check if this line starts a new profile
-            if ($line -match "^[a-zA-Z0-9_-]+:") {
-                if ($line -eq "${Profile}:") {
+            # Check if this line starts a new profile (2 spaces indentation)
+            if ($line -match "^  [a-zA-Z0-9_-]+:") {
+                if ($trimmedLine -eq "${Profile}:") {
                     $inProfile = $true
                 } else {
                     $inProfile = $false
@@ -154,12 +154,12 @@ function Parse-YamlProfile {
                 continue
             }
             
-            # If we're in the target profile, parse the properties
-            if ($inProfile) {
-                if ($line -match "base_url:\s*`"?([^`"]+)`"?") {
+            # If we're in the target profile, parse the properties (4+ spaces indentation)
+            if ($inProfile -and $line -match "^    ") {
+                if ($trimmedLine -match "base_url:\s*`"?([^`"]+)`"?") {
                     $baseUrl = $Matches[1]
                 }
-                elseif ($line -match "key_ref:\s*`"?([^`"]+)`"?") {
+                elseif ($trimmedLine -match "key_ref:\s*`"?([^`"]+)`"?") {
                     $keyRef = $Matches[1]
                 }
             }
