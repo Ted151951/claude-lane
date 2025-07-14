@@ -5,7 +5,8 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(powershell.exe:*)"
     ],
     "deny": []
   }
