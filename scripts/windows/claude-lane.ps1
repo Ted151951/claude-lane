@@ -352,7 +352,6 @@ function List-ProfilesAndKeys {
 
 function Parse-Arguments {
     # Use $args directly instead of param() to avoid advanced function issues
-    Write-Host "DEBUG: Parse-Arguments received $($args.Count) args: '$($args -join "', '")'" -ForegroundColor Cyan
     
     $profile = ""
     $claudeArgs = @()
@@ -455,6 +454,5 @@ if ($args.Count -eq 0) {
     }
 } else {
     # Parse and execute with arguments directly
-    Write-Host "DEBUG: Script has $($args.Count) args: '$($args -join "', '")'" -ForegroundColor Red
     Parse-Arguments @args
 }
