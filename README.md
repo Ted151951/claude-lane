@@ -28,6 +28,18 @@ iwr -useb https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.p
 curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.sh | bash
 ```
 
+### 升级
+
+**从旧版本升级：重新运行安装脚本即可**
+```bash
+# 自动覆盖旧版本并保留配置
+# Windows: 运行上面的 PowerShell 命令
+# Linux/macOS: 运行上面的 Bash 命令
+```
+
+**⚠️ v1.2.0+ 重要变更：** `official` 配置已重命名为 `official-api`  
+详细升级指南请参考：[UPGRADE.md](./UPGRADE.md)
+
 ### 配置
 
 1. **设置配置文件** (`~/.claude/config.yaml`):
@@ -252,6 +264,18 @@ iwr -useb https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.p
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.sh | bash
 ```
+
+### Upgrade
+
+**Upgrade from older versions: Simply re-run the installation script**
+```bash
+# Automatically overwrites old version while preserving config
+# Windows: Run the PowerShell command above
+# Linux/macOS: Run the Bash command above
+```
+
+**⚠️ v1.2.0+ Breaking Change:** `official` profile renamed to `official-api`  
+For detailed upgrade instructions, see: [UPGRADE.md](./UPGRADE.md)
 
 ### Configuration
 
