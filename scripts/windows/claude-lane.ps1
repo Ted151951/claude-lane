@@ -351,16 +351,15 @@ function List-ProfilesAndKeys {
 }
 
 function Parse-Arguments {
-    param([string[]]$Args)
-    
-    Write-Host "DEBUG: Parse-Arguments received $($Args.Count) args: '$($Args -join "', '")'" -ForegroundColor Cyan
+    # Use $args directly instead of param() to avoid advanced function issues
+    Write-Host "DEBUG: Parse-Arguments received $($args.Count) args: '$($args -join "', '")'" -ForegroundColor Cyan
     
     $profile = ""
     $claudeArgs = @()
     $i = 0
     
-    while ($i -lt $Args.Count) {
-        $arg = $Args[$i]
+    while ($i -lt $args.Count) {
+        $arg = $args[$i]
         switch ($arg) {
             "--env-only" {
                 $script:EnvOnly = $true
@@ -379,13 +378,13 @@ function Parse-Arguments {
                 exit 0
             }
             "set-key" {
-                if ($Args.Count -ne 3) {
+                if ($args.Count -ne 3) {
                     Write-Error "'set-key' requires key_ref and api_key arguments"
                     Show-Usage
                     exit 1
                 }
                 Ensure-ConfigDir
-                Call-Keystore @("set", $Args[1], $Args[2])
+                Call-Keystore @("set", $args[1], $args[2])
                 exit 0
             }
             "list" {
@@ -408,7 +407,7 @@ function Parse-Arguments {
                     $i++
                 } else {
                     # This and all remaining args are for claude
-                    $claudeArgs = $Args[$i..($Args.Count-1)]
+                    $claudeArgs = $args[$i..($args.Count-1)]
                     break
                 }
             }
@@ -455,12 +454,7 @@ if ($args.Count -eq 0) {
         }
     }
 } else {
-    # Parse and execute with arguments - create proper array for function call
+    # Parse and execute with arguments directly
     Write-Host "DEBUG: Script has $($args.Count) args: '$($args -join "', '")'" -ForegroundColor Red
-    $argumentArray = @()
-    for ($i = 0; $i -lt $args.Count; $i++) {
-        $argumentArray += $args[$i]
-    }
-    Write-Host "DEBUG: Constructed array has $($argumentArray.Count) items: '$($argumentArray -join "', '")'" -ForegroundColor Red
-    Parse-Arguments $argumentArray
+    Parse-Arguments @args
 }
