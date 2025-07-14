@@ -20,12 +20,12 @@
 
 **Windows (PowerShell):**
 ```powershell
-iwr -useb https://raw.githubusercontent.com/yourusername/claude-lane/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.ps1 | iex
 ```
 
 **macOS/Linux (Bash):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourusername/claude-lane/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.sh | bash
 ```
 
 ### 配置
@@ -245,12 +245,12 @@ Switch between different Claude API endpoints (official, proxies, alternatives) 
 
 **Windows (PowerShell):**
 ```powershell
-iwr -useb https://raw.githubusercontent.com/yourusername/claude-lane/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.ps1 | iex
 ```
 
 **macOS/Linux (Bash):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourusername/claude-lane/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.sh | bash
 ```
 
 ### Configuration

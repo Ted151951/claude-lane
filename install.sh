@@ -6,7 +6,7 @@ set -e
 
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.claude"
-REPO_URL="https://github.com/yourusername/claude-lane"
+REPO_URL="https://github.com/Ted151951/claude-lane"
 TEMP_DIR=$(mktemp -d)
 
 # Colors for output
@@ -194,7 +194,7 @@ show_next_steps() {
     echo "   claude-lane proxy"
     echo ""
     echo "For help: claude-lane help"
-    echo "Documentation: https://github.com/yourusername/claude-lane"
+    echo "Documentation: https://github.com/Ted151951/claude-lane"
 }
 
 main() {

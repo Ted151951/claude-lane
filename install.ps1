@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 # Configuration
 $InstallDir = "$env:USERPROFILE\.local\bin"
 $ConfigDir = "$env:USERPROFILE\.claude"
-$RepoUrl = "https://github.com/yourusername/claude-lane"
+$RepoUrl = "https://github.com/Ted151951/claude-lane"
 $TempDir = Join-Path $env:TEMP "claude-lane-install-$(Get-Random)"
 
 function Write-Status {
