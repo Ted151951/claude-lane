@@ -462,5 +462,5 @@ if ($args.Count -eq 0) {
         $argumentArray += $args[$i]
     }
     Write-Host "DEBUG: Constructed array has $($argumentArray.Count) items: '$($argumentArray -join "', '")'" -ForegroundColor Red
-    Parse-Arguments -Args $argumentArray
+    Parse-Arguments $argumentArray
 }
