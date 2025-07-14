@@ -11,7 +11,7 @@ $ConfigDir = "$env:USERPROFILE\.claude"
 $ConfigFile = "$ConfigDir\config.yaml"
 $LastProfileFile = "$ConfigDir\last_profile"
 $KeystoreScript = "$env:USERPROFILE\.claude\scripts\windows\keystore.ps1"
-$DefaultProfile = "official"
+$DefaultProfile = "official-api"
 
 # Global flags
 $script:EnvOnly = $false
@@ -178,6 +178,27 @@ function Use-Profile {
         exit 1
     }
     
+    # If no config file exists, use Claude CLI's built-in web login
+    if (-not (Test-Path $ConfigFile)) {
+        Write-Host "No configuration found. Using Claude CLI's built-in web login." -ForegroundColor Green
+        Write-Host ""
+        
+        # Auto-run claude if available
+        if (Get-Command claude -ErrorAction SilentlyContinue) {
+            if ($ClaudeArgs.Count -gt 0) {
+                Write-Host "Running: claude $($ClaudeArgs -join ' ')"
+                & claude @ClaudeArgs
+            } else {
+                Write-Host "Running claude interactively..."
+                & claude
+            }
+        } else {
+            Write-Host "Claude CLI not found. Please install it first:" -ForegroundColor Red
+            Write-Host "Visit: https://github.com/anthropics/claude-cli"
+        }
+        return
+    }
+    
     $config = Parse-YamlProfile $Profile
     $apiKey = Call-Keystore @("get", $config.KeyRef)
     
@@ -333,8 +354,13 @@ function Main {
     
     # Handle special case of no arguments
     if ($Args.Count -eq 0) {
-        $lastProfile = Get-CurrentProfile
-        Use-Profile $lastProfile
+        # If no config file, use web login directly
+        if (-not (Test-Path $ConfigFile)) {
+            Use-Profile "web" @()  # Will be handled as web login in Use-Profile
+        } else {
+            $lastProfile = Get-CurrentProfile
+            Use-Profile $lastProfile
+        }
         return
     }
     

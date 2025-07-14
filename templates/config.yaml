@@ -4,8 +4,8 @@
 # Define your API endpoints here
 # Each profile needs a base_url and key_ref
 endpoints:
-  # Official Anthropic API
-  official:
+  # Official Anthropic API (requires API key)
+  official-api:
     base_url: "https://api.anthropic.com"
     key_ref: "official"
   
@@ -24,22 +24,23 @@ endpoints:
     base_url: "http://localhost:8080/v1"
     key_ref: "local"
 
-# Usage (v1.1.0+):
+# Usage (v1.2.0+):
+# Default behavior (no config needed):
+#    claude-lane "Hello, how are you?"        # Uses Claude CLI's built-in web login
+#    claude-lane                              # Interactive mode with web login
+#
+# API key mode (requires config):
 # 1. Store your API keys securely:
 #    claude-lane set-key official sk-ant-api03-...
 #    claude-lane set-key proxy your-proxy-key
 #    claude-lane set-key kimi your-kimi-key
 #
-# 2. Quick chat (uses last/default profile):
-#    claude-lane "Hello, how are you?"
-#    claude-lane                              # Interactive mode
+# 2. Use API profiles:
+#    claude-lane official-api "Write a poem"  # Use official API with key
+#    claude-lane proxy "Translate this"       # Use proxy service
 #
-# 3. Switch profiles and chat:
-#    claude-lane official "Write a poem"
-#    claude-lane proxy                        # Interactive mode with proxy
+# 3. Environment-only mode:
+#    claude-lane --env-only official-api      # Set env vars only
 #
-# 4. Environment-only mode:
-#    claude-lane --env-only official          # Set env vars only
-#
-# 5. Check status:
+# 4. Check status:
 #    claude-lane status                       # Show current configuration

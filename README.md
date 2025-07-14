@@ -54,7 +54,7 @@ claude-lane set-key proxy 你的代理密钥
 claude-lane "你好，今天天气怎么样？"
 
 # 指定配置并对话
-claude-lane official "写一首诗"
+claude-lane official-api "写一首诗"
 
 # 交互模式
 claude-lane                    # 使用上次配置
@@ -279,7 +279,7 @@ claude-lane set-key proxy your-proxy-api-key
 claude-lane "Hello, how are you today?"
 
 # Specify profile and chat
-claude-lane official "Write a poem"
+claude-lane official-api "Write a poem"
 
 # Interactive mode
 claude-lane                    # Use last profile

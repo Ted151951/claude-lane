@@ -9,7 +9,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 CONFIG_DIR="$HOME/.claude"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 LAST_PROFILE_FILE="$CONFIG_DIR/last_profile"
-DEFAULT_PROFILE="official"
+DEFAULT_PROFILE="official-api"
 
 # Global flags
 ENV_ONLY=false
@@ -215,6 +215,27 @@ use_profile() {
         exit 1
     fi
     
+    # If no config file exists, use Claude CLI's built-in web login
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "No configuration found. Using Claude CLI's built-in web login."
+        echo ""
+        
+        # Auto-run claude if available
+        if command -v claude >/dev/null 2>&1; then
+            if [[ $# -gt 0 ]]; then
+                echo "Running: claude $*"
+                exec claude "$@"
+            else
+                echo "Running claude interactively..."
+                exec claude
+            fi
+        else
+            echo "Claude CLI not found. Please install it first:"
+            echo "Visit: https://github.com/anthropics/claude-cli"
+        fi
+        return
+    fi
+    
     # Parse configuration
     local config_data="$(parse_yaml "$CONFIG_FILE" "$profile")"
     local base_url="$(echo "$config_data" | cut -d'|' -f1)"
@@ -374,8 +395,13 @@ parse_args() {
 main() {
     # Handle special case of no arguments
     if [[ $# -eq 0 ]]; then
-        local last_profile="$(get_current_profile)"
-        use_profile "$last_profile"
+        # If no config file, use web login directly
+        if [[ ! -f "$CONFIG_FILE" ]]; then
+            use_profile "web"  # Will be handled as web login in use_profile
+        else
+            local last_profile="$(get_current_profile)"
+            use_profile "$last_profile"
+        fi
         exit 0
     fi
     
