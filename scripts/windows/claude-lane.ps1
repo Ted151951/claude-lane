@@ -177,6 +177,27 @@ function Parse-YamlProfile {
     }
 }
 
+function Use-WebLogin {
+    param([string[]]$ClaudeArgs = @())
+    
+    Write-Host "Using Claude CLI's built-in web login..." -ForegroundColor Green
+    Write-Host ""
+    
+    # Auto-run claude if available
+    if (Get-Command claude -ErrorAction SilentlyContinue) {
+        if ($ClaudeArgs.Count -gt 0) {
+            Write-Host "Running: claude $($ClaudeArgs -join ' ')"
+            & claude @ClaudeArgs
+        } else {
+            Write-Host "Running claude interactively..."
+            & claude
+        }
+    } else {
+        Write-Host "Claude CLI not found. Please install it first:" -ForegroundColor Red
+        Write-Host "Visit: https://github.com/anthropics/claude-cli"
+    }
+}
+
 function Use-Profile {
     param(
         [string]$Profile,
@@ -193,20 +214,7 @@ function Use-Profile {
     if (-not (Test-Path $ConfigFile)) {
         Write-Host "No configuration found. Using Claude CLI's built-in web login." -ForegroundColor Green
         Write-Host ""
-        
-        # Auto-run claude if available
-        if (Get-Command claude -ErrorAction SilentlyContinue) {
-            if ($ClaudeArgs.Count -gt 0) {
-                Write-Host "Running: claude $($ClaudeArgs -join ' ')"
-                & claude @ClaudeArgs
-            } else {
-                Write-Host "Running claude interactively..."
-                & claude
-            }
-        } else {
-            Write-Host "Claude CLI not found. Please install it first:" -ForegroundColor Red
-            Write-Host "Visit: https://github.com/anthropics/claude-cli"
-        }
+        Use-WebLogin $ClaudeArgs
         return
     }
     
@@ -422,7 +430,7 @@ function Main {
     if ($Args.Count -eq 0) {
         # If no config file, use web login directly
         if (-not (Test-Path $ConfigFile)) {
-            Use-Profile "web" @()  # Will be handled as web login in Use-Profile
+            Use-WebLogin @()
         } else {
             $lastProfile = Get-CurrentProfile
             # Check if the profile exists and has a key before using it
@@ -438,14 +446,12 @@ function Main {
                     Write-Host "To set up the key: claude-lane set-key $($config.KeyRef) sk-your-api-key"
                     Write-Host "Or use web login: claude-lane (without profile name)"
                     Write-Host ""
-                    Write-Host "Using Claude CLI's built-in web login instead..." -ForegroundColor Green
-                    Use-Profile "web" @()
+                    Use-WebLogin @()
                 }
             } else {
                 # Invalid profile, fall back to web login
                 Write-Host "Last used profile '$lastProfile' not found in config." -ForegroundColor Yellow
-                Write-Host "Using Claude CLI's built-in web login..." -ForegroundColor Green
-                Use-Profile "web" @()
+                Use-WebLogin @()
             }
         }
         return

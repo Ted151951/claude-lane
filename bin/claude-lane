@@ -213,6 +213,25 @@ parse_yaml() {
     echo "$base_url|$key_ref"
 }
 
+use_web_login() {
+    echo "Using Claude CLI's built-in web login..."
+    echo ""
+    
+    # Auto-run claude if available
+    if command -v claude >/dev/null 2>&1; then
+        if [[ $# -gt 0 ]]; then
+            echo "Running: claude $*"
+            exec claude "$@"
+        else
+            echo "Running claude interactively..."
+            exec claude
+        fi
+    else
+        echo "Claude CLI not found. Please install it first:"
+        echo "Visit: https://github.com/anthropics/claude-cli"
+    fi
+}
+
 use_profile() {
     local profile="$1"
     shift # Remove profile from arguments, rest are claude arguments
@@ -227,20 +246,7 @@ use_profile() {
     if [[ ! -f "$CONFIG_FILE" ]]; then
         echo "No configuration found. Using Claude CLI's built-in web login."
         echo ""
-        
-        # Auto-run claude if available
-        if command -v claude >/dev/null 2>&1; then
-            if [[ $# -gt 0 ]]; then
-                echo "Running: claude $*"
-                exec claude "$@"
-            else
-                echo "Running claude interactively..."
-                exec claude
-            fi
-        else
-            echo "Claude CLI not found. Please install it first:"
-            echo "Visit: https://github.com/anthropics/claude-cli"
-        fi
+        use_web_login "$@"
         return
     fi
     
@@ -462,7 +468,7 @@ main() {
     if [[ $# -eq 0 ]]; then
         # If no config file, use web login directly
         if [[ ! -f "$CONFIG_FILE" ]]; then
-            use_profile "web"  # Will be handled as web login in use_profile
+            use_web_login
         else
             local last_profile="$(get_current_profile)"
             # Check if the profile exists and has a key before using it
@@ -479,20 +485,17 @@ main() {
                         echo "To set up the key: claude-lane set-key $key_ref sk-your-api-key"
                         echo "Or use web login: claude-lane (without profile name)"
                         echo ""
-                        echo "Using Claude CLI's built-in web login instead..."
-                        use_profile "web"
+                        use_web_login
                     fi
                 else
                     # Invalid profile, fall back to web login
                     echo "Last used profile '$last_profile' not found in config."
-                    echo "Using Claude CLI's built-in web login..."
-                    use_profile "web"
+                    use_web_login
                 fi
             else
                 # Invalid profile, fall back to web login
                 echo "Last used profile '$last_profile' not found in config."
-                echo "Using Claude CLI's built-in web login..."
-                use_profile "web"
+                use_web_login
             fi
         fi
         exit 0
