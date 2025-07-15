@@ -16,7 +16,7 @@ endpoints:
   
   # Example alternative service (like Kimi)
   kimi:
-    base_url: "https://api.moonshot.cn/v1"
+    base_url: "https://api.moonshot.cn/anthropic"
     # key_ref not needed - will use "kimi" as key reference
   
   # Local development server
