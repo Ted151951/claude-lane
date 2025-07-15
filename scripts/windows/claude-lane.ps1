@@ -369,76 +369,65 @@ function List-ProfilesAndKeys {
     Write-Host "With API profile: claude-lane profile-name `"Hello`"" -ForegroundColor Cyan
 }
 
-function Parse-Arguments {
-    # Use $args directly instead of param() to avoid advanced function issues
-    
-    $profile = ""
-    $claudeArgs = @()
-    $i = 0
-    
-    while ($i -lt $args.Count) {
-        $arg = $args[$i]
-        switch ($arg) {
-            "--env-only" {
-                $script:EnvOnly = $true
-                $i++
-            }
-            "--reset" {
-                $profile = $DefaultProfile
-                $i++
-            }
-            { $_ -in @("--help", "-h", "help") } {
-                Show-Usage
-                exit 0
-            }
-            "--version" {
-                Write-Host "claude-lane v1.2.0"
-                exit 0
-            }
-            "set-key" {
-                if ($args.Count -ne 3) {
-                    Write-Error "'set-key' requires key_ref and api_key arguments"
-                    Show-Usage
-                    exit 1
-                }
-                Ensure-ConfigDir
-                Call-Keystore @("set", $args[1], $args[2])
-                exit 0
-            }
-            "list" {
-                List-ProfilesAndKeys
-                exit 0
-            }
-            "status" {
-                Show-Status
-                exit 0
-            }
-            { $_.StartsWith("-") } {
-                Write-Error "Unknown option '$arg'"
+# Parse command line arguments directly at script level
+$profile = ""
+$claudeArgs = @()
+$i = 0
+
+while ($i -lt $args.Count) {
+    $arg = $args[$i]
+    switch ($arg) {
+        "--env-only" {
+            $script:EnvOnly = $true
+            $i++
+        }
+        "--reset" {
+            $profile = $DefaultProfile
+            $i++
+        }
+        { $_ -in @("--help", "-h", "help") } {
+            Show-Usage
+            exit 0
+        }
+        "--version" {
+            Write-Host "claude-lane v1.2.0"
+            exit 0
+        }
+        "set-key" {
+            if ($args.Count -ne 3) {
+                Write-Error "'set-key' requires key_ref and api_key arguments"
                 Show-Usage
                 exit 1
             }
-            default {
-                # Check if this is a known profile
-                if (-not $profile -and (Test-ValidProfile $arg)) {
-                    $profile = $arg
-                    $i++
-                } else {
-                    # This and all remaining args are for claude
-                    $claudeArgs = $args[$i..($args.Count-1)]
-                    break
-                }
+            Ensure-ConfigDir
+            Call-Keystore @("set", $args[1], $args[2])
+            exit 0
+        }
+        "list" {
+            List-ProfilesAndKeys
+            exit 0
+        }
+        "status" {
+            Show-Status
+            exit 0
+        }
+        { $_.StartsWith("-") } {
+            Write-Error "Unknown option '$arg'"
+            Show-Usage
+            exit 1
+        }
+        default {
+            # Check if this is a known profile
+            if (-not $profile -and (Test-ValidProfile $arg)) {
+                $profile = $arg
+                $i++
+            } else {
+                # This and all remaining args are for claude
+                $claudeArgs = $args[$i..($args.Count-1)]
+                break
             }
         }
     }
-    
-    # If no profile specified, use last/default
-    if (-not $profile) {
-        $profile = Get-CurrentProfile
-    }
-    
-    # Use the profile and pass remaining args to claude
-    Use-Profile $profile $claudeArgs
 }
 
 
@@ -472,6 +461,12 @@ if ($args.Count -eq 0) {
         }
     }
 } else {
-    # Parse and execute with arguments directly
-    Parse-Arguments @args
+    # Arguments were parsed above, now execute
+    # If no profile specified, use last/default
+    if (-not $profile) {
+        $profile = Get-CurrentProfile
+    }
+    
+    # Use the profile and pass remaining args to claude
+    Use-Profile $profile $claudeArgs
 }
