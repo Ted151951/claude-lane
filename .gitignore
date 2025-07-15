@@ -61,8 +61,8 @@ prompt.md
 design-docs/
 internal-docs/
 
-# Testing documents (development only)
-TESTING.md
+# Internal development documents (private)
+docs/internal/
 testing/
 test-reports/
 *.testing.md
