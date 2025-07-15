@@ -102,7 +102,7 @@ claude-lane official     # 使用 API 密钥模式
 
 #### v1.2.0 及之后：
 ```bash
-claude-lane                  # ✅ 自动使用 Claude CLI 网页登录
+claude-lane                  # ✅ 自动使用 Claude Code 网页登录
 claude-lane official-api     # 使用 API 密钥模式
 ```
 

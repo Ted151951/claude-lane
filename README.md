@@ -2,9 +2,9 @@
 
 <div align="center">
 
-## 🔐 终于有一个不会泄露你API密钥的Claude切换工具了
+## 🔐 Claude API密钥明文存储太危险！用claude-lane加密保护
 
-**claude-lane** 使用系统级硬件加密保护你的API密钥，告别明文存储的安全隐患！
+**claude-lane** 让你的Claude API密钥享受银行级系统加密保护，彻底告别配置文件明文存储！
 
 🔒 **Windows DPAPI** • **macOS Keychain** • **Linux Secret Service**
 
@@ -25,7 +25,7 @@
 
 - **🔄 一键切换**: `claude-lane official-api` 瞬间切换端点
 - **🌍 跨平台统一**: Windows、macOS、Linux 完全相同体验
-- **🔄 智能回退**: 无配置时自动使用Claude网页登录  
+- **🔄 智能回退**: 无配置时自动使用Claude Code网页登录  
 - **⚙️ 灵活配置**: 支持官方、代理、私有部署等任意端点
 
 ---
@@ -35,7 +35,7 @@
 使用 claude-lane 之前，请确保已安装以下工具：
 
 ### 🔧 必需组件
-- **[Claude CLI](https://github.com/anthropics/claude-cli)** - Anthropic官方命令行工具
+- **[Claude Code](https://github.com/anthropics/claude-code)** - Anthropic官方命令行工具
   ```bash
   npm install -g @anthropic-ai/claude-code
   ```
@@ -249,9 +249,9 @@ systemctl --user status gnome-keyring-daemon
 - 点击"始终允许"以避免重复提示
 - 如需要可使用钥匙串访问应用管理存储的密钥
 
-## 与 Claude CLI 集成
+## 与 Claude Code 集成
 
-claude-lane 设置的环境变量会被官方 Claude CLI 识别：
+claude-lane 设置的环境变量会被官方 Claude Code 识别：
 
 ```bash
 # 切换配置后
@@ -261,7 +261,7 @@ claude-lane official
 # ANTHROPIC_API_KEY=你的API密钥
 # ANTHROPIC_BASE_URL=https://api.anthropic.com
 
-# 配合 Claude CLI 使用
+# 配合 Claude Code 使用
 claude "你好，最近怎么样？"
 ```
 
@@ -486,9 +486,9 @@ systemctl --user status gnome-keyring-daemon
 - Click "Always Allow" to avoid repeated prompts
 - Use Keychain Access.app to manage stored keys if needed
 
-## Integration with Claude CLI
+## Integration with Claude Code
 
-claude-lane sets environment variables that the official Claude CLI recognizes:
+claude-lane sets environment variables that the official Claude Code recognizes:
 
 ```bash
 # After switching profiles
@@ -498,7 +498,7 @@ claude-lane official
 # ANTHROPIC_API_KEY=your-api-key
 # ANTHROPIC_BASE_URL=https://api.anthropic.com
 
-# Use with Claude CLI
+# Use with Claude Code
 claude "Hello, how are you?"
 ```
 

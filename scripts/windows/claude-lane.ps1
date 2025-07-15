@@ -95,9 +95,9 @@ function Show-Status {
     Write-Host ""
     if (Get-Command claude -ErrorAction SilentlyContinue) {
         $claudePath = (Get-Command claude).Source
-        Write-Host "Claude CLI: Available ($claudePath)"
+        Write-Host "Claude Code: Available ($claudePath)"
     } else {
-        Write-Host "Claude CLI: Not found in PATH"
+        Write-Host "Claude Code: Not found in PATH"
     }
     
     Write-Host ""
@@ -192,7 +192,7 @@ function Parse-YamlProfile {
 function Use-WebLogin {
     param([string[]]$ClaudeArgs = @())
     
-    Write-Host "Using Claude CLI's built-in web login..." -ForegroundColor Green
+    Write-Host "Using Claude Code's built-in web login..." -ForegroundColor Green
     Write-Host ""
     
     # Auto-run claude if available
@@ -205,8 +205,8 @@ function Use-WebLogin {
             & claude
         }
     } else {
-        Write-Host "Claude CLI not found. Please install it first:" -ForegroundColor Red
-        Write-Host "Visit: https://github.com/anthropics/claude-cli"
+        Write-Host "Claude Code not found. Please install it first:" -ForegroundColor Red
+        Write-Host "Visit: https://github.com/anthropics/claude-code"
     }
 }
 
@@ -222,9 +222,9 @@ function Use-Profile {
         exit 1
     }
     
-    # If no config file exists, use Claude CLI's built-in web login
+    # If no config file exists, use Claude Code's built-in web login
     if (-not (Test-Path $ConfigFile)) {
-        Write-Host "No configuration found. Using Claude CLI's built-in web login." -ForegroundColor Green
+        Write-Host "No configuration found. Using Claude Code's built-in web login." -ForegroundColor Green
         Write-Host ""
         Use-WebLogin $ClaudeArgs
         return
@@ -276,11 +276,11 @@ function Use-Profile {
         }
     } else {
         Write-Host ""
-        Write-Host "Claude CLI not found. Environment variables set:"
+        Write-Host "Claude Code not found. Environment variables set:"
         Write-Host "  ANTHROPIC_API_KEY=***"
         Write-Host "  ANTHROPIC_BASE_URL=$($config.BaseUrl)"
         Write-Host ""
-        Write-Host "To install Claude CLI, visit: https://github.com/anthropics/claude-cli"
+        Write-Host "To install Claude Code, visit: https://github.com/anthropics/claude-code"
         if ($ClaudeArgs.Count -gt 0) {
             Write-Host ""
             Write-Host "You wanted to run: claude $($ClaudeArgs -join ' ')"

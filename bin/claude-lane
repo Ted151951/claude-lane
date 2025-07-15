@@ -144,9 +144,9 @@ show_status() {
     
     echo ""
     if command -v claude >/dev/null 2>&1; then
-        echo "Claude CLI: Available ($(which claude))"
+        echo "Claude Code: Available ($(which claude))"
     else
-        echo "Claude CLI: Not found in PATH"
+        echo "Claude Code: Not found in PATH"
     fi
     
     echo ""
@@ -219,7 +219,7 @@ parse_yaml() {
 }
 
 use_web_login() {
-    echo "Using Claude CLI's built-in web login..."
+    echo "Using Claude Code's built-in web login..."
     echo ""
     
     # Auto-run claude if available
@@ -232,8 +232,8 @@ use_web_login() {
             exec claude
         fi
     else
-        echo "Claude CLI not found. Please install it first:"
-        echo "Visit: https://github.com/anthropics/claude-cli"
+        echo "Claude Code not found. Please install it first:"
+        echo "Visit: https://github.com/anthropics/claude-code"
     fi
 }
 
@@ -247,9 +247,9 @@ use_profile() {
         exit 1
     fi
     
-    # If no config file exists, use Claude CLI's built-in web login
+    # If no config file exists, use Claude Code's built-in web login
     if [[ ! -f "$CONFIG_FILE" ]]; then
-        echo "No configuration found. Using Claude CLI's built-in web login."
+        echo "No configuration found. Using Claude Code's built-in web login."
         echo ""
         use_web_login "$@"
         return
@@ -268,7 +268,7 @@ use_profile() {
         exit 1
     fi
     
-    # Set environment variables for Claude CLI
+    # Set environment variables for Claude Code
     export ANTHROPIC_API_KEY="$api_key"
     export ANTHROPIC_BASE_URL="$base_url"
     export CLAUDE_LANE_PROFILE="$profile"
@@ -305,11 +305,11 @@ use_profile() {
         fi
     else
         echo ""
-        echo "Claude CLI not found. Environment variables set:"
+        echo "Claude Code not found. Environment variables set:"
         echo "  ANTHROPIC_API_KEY=***"
         echo "  ANTHROPIC_BASE_URL=$base_url"
         echo ""
-        echo "To install Claude CLI, visit: https://github.com/anthropics/claude-cli"
+        echo "To install Claude Code, visit: https://github.com/anthropics/claude-code"
         if [[ $# -gt 0 ]]; then
             echo ""
             echo "You wanted to run: claude $*"

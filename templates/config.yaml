@@ -26,7 +26,7 @@ endpoints:
 
 # Usage (v1.2.0+):
 # Default behavior (no config needed):
-#    claude-lane "Hello, how are you?"        # Uses Claude CLI's built-in web login
+#    claude-lane "Hello, how are you?"        # Uses Claude Code's built-in web login
 #    claude-lane                              # Interactive mode with web login
 #
 # API key mode (requires config):
