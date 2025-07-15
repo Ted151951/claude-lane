@@ -173,9 +173,14 @@ function Parse-YamlProfile {
         }
     }
     
-    if (-not $baseUrl -or -not $keyRef) {
+    if (-not $baseUrl) {
         Write-Error "Profile '$Profile' not found or incomplete"
         exit 1
+    }
+    
+    # If no key_ref specified, use profile name as key reference
+    if (-not $keyRef) {
+        $keyRef = $Profile
     }
     
     return @{
@@ -295,7 +300,7 @@ function List-ProfilesAndKeys {
         Write-Host ""
         Write-Host "  • Set up API keys for advanced usage:" -ForegroundColor Cyan
         Write-Host "    1. Copy template: Copy-Item `"$env:USERPROFILE\.claude\scripts\windows\..\..\templates\config.yaml`" `"$ConfigFile`""
-        Write-Host "    2. Store API key: claude-lane set-key official sk-ant-api03-your-key"
+        Write-Host "    2. Store API key: claude-lane set-key official-api sk-ant-api03-your-key"
         Write-Host "    3. Use API mode: claude-lane official-api `"Hello`""
         return
     }
@@ -315,7 +320,7 @@ function List-ProfilesAndKeys {
         if ($inEndpoints -and $line -match "^  ([a-zA-Z0-9_-]+):") {
             $profileName = $Matches[1]
             
-            # Try to get the key_ref for this profile
+            # Try to get the key_ref for this profile, or use profile name as default
             $keyRef = ""
             $profileFound = $false
             $inThisProfile = $false
@@ -333,6 +338,11 @@ function List-ProfilesAndKeys {
                     $keyRef = $Matches[1]
                     break
                 }
+            }
+            
+            # If no key_ref specified, use profile name as key reference
+            if (-not $keyRef) {
+                $keyRef = $profileName
             }
             
             # Check if the key exists
