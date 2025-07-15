@@ -392,7 +392,7 @@ function Parse-Arguments {
                 exit 0
             }
             "--version" {
-                Write-Host "claude-lane v1.1.0"
+                Write-Host "claude-lane v1.2.0"
                 exit 0
             }
             "set-key" {

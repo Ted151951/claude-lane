@@ -12,6 +12,8 @@ $InstallDir = "$env:USERPROFILE\.local\bin"
 $ConfigDir = "$env:USERPROFILE\.claude"
 $RepoUrl = "https://github.com/Ted151951/claude-lane"
 $TempDir = Join-Path $env:TEMP "claude-lane-install-$(Get-Random)"
+$CurrentVersion = "v1.2.0"
+$script:IsUpgrade = $false
 
 function Write-Status {
     param([string]$Message)
@@ -58,6 +60,62 @@ function Test-ExecutionPolicy {
     }
 }
 
+function Test-ExistingInstallation {
+    $installedVersion = ""
+    
+    # Check if claude-lane is already installed
+    if (Test-Path "$InstallDir\claude-lane.bat") {
+        Write-Status "Found existing claude-lane installation"
+        
+        # Try to get version from the installed script
+        if (Get-Command claude-lane -ErrorAction SilentlyContinue) {
+            try {
+                $versionOutput = & claude-lane --version 2>$null
+                if ($versionOutput -match "v(\d+\.\d+\.\d+)") {
+                    $installedVersion = "v$($Matches[1])"
+                }
+            }
+            catch {
+                # Version command failed, continue with upgrade
+            }
+        }
+        
+        if ($installedVersion) {
+            Write-Status "Currently installed version: $installedVersion"
+            
+            if ($installedVersion -eq $CurrentVersion) {
+                Write-Warning "claude-lane $CurrentVersion is already installed"
+                Write-Host "Re-running installation to ensure all components are up to date..."
+                $script:IsUpgrade = $true
+            }
+            elseif ([System.Version]($installedVersion -replace 'v','') -lt [System.Version]($CurrentVersion -replace 'v','')) {
+                Write-Status "Upgrading from $installedVersion to $CurrentVersion"
+                $script:IsUpgrade = $true
+            }
+            else {
+                Write-Warning "Installed version ($installedVersion) is newer than this installer ($CurrentVersion)"
+                Write-Host "Proceeding with installation anyway..."
+                $script:IsUpgrade = $true
+            }
+        }
+        else {
+            Write-Status "Existing installation found but version could not be determined"
+            Write-Status "Proceeding with upgrade..."
+            $script:IsUpgrade = $true
+        }
+        
+        # Backup existing config if it exists and this is an upgrade
+        if ((Test-Path "$ConfigDir\config.yaml") -and $script:IsUpgrade) {
+            $backupFile = "$ConfigDir\config.yaml.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+            Copy-Item "$ConfigDir\config.yaml" $backupFile
+            Write-Status "Backed up existing config to: $backupFile"
+        }
+    }
+    else {
+        Write-Status "No existing installation found - performing fresh installation"
+    }
+}
+
 function Download-ClaudeLane {
     Write-Status "Downloading claude-lane..."
     
@@ -90,7 +148,12 @@ function Download-ClaudeLane {
 }
 
 function Install-ClaudeLane {
-    Write-Status "Installing claude-lane..."
+    if ($script:IsUpgrade) {
+        Write-Status "Upgrading claude-lane..."
+    }
+    else {
+        Write-Status "Installing claude-lane..."
+    }
     
     # Create installation directories
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
@@ -121,12 +184,19 @@ powershell.exe -ExecutionPolicy Bypass -Command "& '%USERPROFILE%\.claude\script
     Copy-Item "$TempDir\claude-lane\scripts\windows\keystore.ps1" -Destination $scriptsDir
     Copy-Item "$TempDir\claude-lane\scripts\windows\claude-lane.ps1" -Destination $scriptsDir
     
-    # PowerShell script is now copied directly from repository
+    # Copy templates directory for reference
+    $templatesDir = "$env:USERPROFILE\.claude\templates"
+    New-Item -ItemType Directory -Path $templatesDir -Force | Out-Null
+    Copy-Item "$TempDir\claude-lane\templates\config.yaml" -Destination $templatesDir
     
-    # Copy configuration template if it doesn't exist
+    # Copy configuration template only if it doesn't exist (fresh install)
     if (-not (Test-Path "$ConfigDir\config.yaml")) {
         Copy-Item "$TempDir\claude-lane\templates\config.yaml" -Destination $ConfigDir
         Write-Status "Created default configuration at $ConfigDir\config.yaml"
+    }
+    elseif ($script:IsUpgrade) {
+        Write-Status "Preserved existing configuration at $ConfigDir\config.yaml"
+        Write-Status "Updated template available at $templatesDir\config.yaml"
     }
 }
 
@@ -148,23 +218,46 @@ function Remove-TempFiles {
 }
 
 function Show-NextSteps {
-    Write-Success "claude-lane installed successfully!"
-    Write-Host ""
-    Write-Host "Next steps:"
-    Write-Host "1. Edit your configuration: $ConfigDir\config.yaml"
-    Write-Host "2. Store your API keys:"
-    Write-Host "   claude-lane set-key official sk-ant-api03-..."
-    Write-Host "   claude-lane set-key proxy your-proxy-key"
-    Write-Host "3. Switch between endpoints:"
-    Write-Host "   claude-lane official"
-    Write-Host "   claude-lane proxy"
-    Write-Host ""
-    Write-Host "For help: claude-lane help"
+    if ($script:IsUpgrade) {
+        Write-Success "claude-lane upgraded successfully to $CurrentVersion!"
+        Write-Host ""
+        Write-Host "Upgrade completed:" -ForegroundColor Green
+        Write-Host "• Configuration preserved at $ConfigDir\config.yaml"
+        Write-Host "• API keys remain securely stored"
+        Write-Host "• Updated template available at $env:USERPROFILE\.claude\templates\config.yaml"
+        Write-Host ""
+        Write-Host "Test your upgrade:"
+        Write-Host "  claude-lane status"
+        Write-Host "  claude-lane --version"
+        Write-Host ""
+        if (Test-Path "$ConfigDir\config.yaml.backup.*") {
+            Write-Host "Configuration backup created for safety"
+        }
+        Write-Host "For upgrade guide: https://github.com/Ted151951/claude-lane/blob/main/UPGRADE.md"
+    }
+    else {
+        Write-Success "claude-lane installed successfully!"
+        Write-Host ""
+        Write-Host "Next steps:"
+        Write-Host "1. Edit your configuration: $ConfigDir\config.yaml"
+        Write-Host "2. Store your API keys:"
+        Write-Host "   claude-lane set-key official-api sk-ant-api03-..."
+        Write-Host "   claude-lane set-key proxy your-proxy-key"
+        Write-Host "3. Switch between endpoints:"
+        Write-Host "   claude-lane official-api"
+        Write-Host "   claude-lane proxy"
+        Write-Host ""
+        Write-Host "For help: claude-lane help"
+    }
+    Write-Host "Documentation: https://github.com/Ted151951/claude-lane"
 }
 
 function Main {
     Write-Host "🚀 claude-lane Installation Script for Windows" -ForegroundColor Cyan
     Write-Host "=============================================" -ForegroundColor Cyan
+    
+    # Check for existing installation first
+    Test-ExistingInstallation
     
     # Pre-flight checks
     Test-PowerShellVersion

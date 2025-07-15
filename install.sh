@@ -8,6 +8,8 @@ INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.claude"
 REPO_URL="https://github.com/Ted151951/claude-lane"
 TEMP_DIR=$(mktemp -d)
+CURRENT_VERSION="v1.2.0"
+IS_UPGRADE=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -44,6 +46,50 @@ detect_platform() {
             echo "unsupported"
             ;;
     esac
+}
+
+check_existing_installation() {
+    local installed_version=""
+    
+    # Check if claude-lane is already installed
+    if [[ -f "$INSTALL_DIR/claude-lane" ]]; then
+        print_status "Found existing claude-lane installation"
+        
+        # Try to get version from the installed script
+        if command -v claude-lane >/dev/null 2>&1; then
+            installed_version=$(claude-lane --version 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "")
+        fi
+        
+        if [[ -n "$installed_version" ]]; then
+            print_status "Currently installed version: $installed_version"
+            
+            if [[ "$installed_version" == "$CURRENT_VERSION" ]]; then
+                print_warning "claude-lane $CURRENT_VERSION is already installed"
+                echo "Re-running installation to ensure all components are up to date..."
+                IS_UPGRADE=true
+            elif [[ "$installed_version" < "$CURRENT_VERSION" ]]; then
+                print_status "Upgrading from $installed_version to $CURRENT_VERSION"
+                IS_UPGRADE=true
+            else
+                print_warning "Installed version ($installed_version) is newer than this installer ($CURRENT_VERSION)"
+                echo "Proceeding with installation anyway..."
+                IS_UPGRADE=true
+            fi
+        else
+            print_status "Existing installation found but version could not be determined"
+            print_status "Proceeding with upgrade..."
+            IS_UPGRADE=true
+        fi
+        
+        # Backup existing config if it exists and is not the template
+        if [[ -f "$CONFIG_DIR/config.yaml" && "$IS_UPGRADE" == true ]]; then
+            local backup_file="$CONFIG_DIR/config.yaml.backup.$(date +%Y%m%d_%H%M%S)"
+            cp "$CONFIG_DIR/config.yaml" "$backup_file"
+            print_status "Backed up existing config to: $backup_file"
+        fi
+    else
+        print_status "No existing installation found - performing fresh installation"
+    fi
 }
 
 check_dependencies() {
@@ -108,7 +154,11 @@ download_claude_lane() {
 install_claude_lane() {
     local platform="$1"
     
-    print_status "Installing claude-lane..."
+    if [[ "$IS_UPGRADE" == true ]]; then
+        print_status "Upgrading claude-lane..."
+    else
+        print_status "Installing claude-lane..."
+    fi
     
     # Create installation directory
     mkdir -p "$INSTALL_DIR"
@@ -124,19 +174,29 @@ install_claude_lane() {
     
     case "$platform" in
         "macos")
-            cp "$TEMP_DIR/claude-lane/scripts/macos/keystore.sh" "$keystore_dir/"
-            chmod +x "$keystore_dir/keystore.sh"
+            mkdir -p "$keystore_dir/macos"
+            cp "$TEMP_DIR/claude-lane/scripts/macos/keystore.sh" "$keystore_dir/macos/"
+            chmod +x "$keystore_dir/macos/keystore.sh"
             ;;
         "linux")
-            cp "$TEMP_DIR/claude-lane/scripts/linux/keystore.sh" "$keystore_dir/"
-            chmod +x "$keystore_dir/keystore.sh"
+            mkdir -p "$keystore_dir/linux"
+            cp "$TEMP_DIR/claude-lane/scripts/linux/keystore.sh" "$keystore_dir/linux/"
+            chmod +x "$keystore_dir/linux/keystore.sh"
             ;;
     esac
     
-    # Copy configuration template if it doesn't exist
+    # Copy templates directory for reference
+    local templates_dir="$HOME/.claude/templates"
+    mkdir -p "$templates_dir"
+    cp "$TEMP_DIR/claude-lane/templates/config.yaml" "$templates_dir/"
+    
+    # Copy configuration template only if it doesn't exist (fresh install)
     if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
         cp "$TEMP_DIR/claude-lane/templates/config.yaml" "$CONFIG_DIR/"
         print_status "Created default configuration at $CONFIG_DIR/config.yaml"
+    elif [[ "$IS_UPGRADE" == true ]]; then
+        print_status "Preserved existing configuration at $CONFIG_DIR/config.yaml"
+        print_status "Updated template available at $templates_dir/config.yaml"
     fi
 }
 
@@ -182,24 +242,45 @@ cleanup() {
 }
 
 show_next_steps() {
-    print_success "claude-lane installed successfully!"
-    echo ""
-    echo "Next steps:"
-    echo "1. Edit your configuration: $CONFIG_DIR/config.yaml"
-    echo "2. Store your API keys:"
-    echo "   claude-lane set-key official sk-ant-api03-..."
-    echo "   claude-lane set-key proxy your-proxy-key"
-    echo "3. Switch between endpoints:"
-    echo "   claude-lane official"
-    echo "   claude-lane proxy"
-    echo ""
-    echo "For help: claude-lane help"
+    if [[ "$IS_UPGRADE" == true ]]; then
+        print_success "claude-lane upgraded successfully to $CURRENT_VERSION!"
+        echo ""
+        echo "Upgrade completed:"
+        echo "• Configuration preserved at $CONFIG_DIR/config.yaml"
+        echo "• API keys remain securely stored"
+        echo "• Updated template available at $HOME/.claude/templates/config.yaml"
+        echo ""
+        echo "Test your upgrade:"
+        echo "  claude-lane status"
+        echo "  claude-lane --version"
+        echo ""
+        if [[ -f "$CONFIG_DIR/config.yaml.backup."* ]]; then
+            echo "Configuration backup created for safety"
+        fi
+        echo "For upgrade guide: https://github.com/Ted151951/claude-lane/blob/main/UPGRADE.md"
+    else
+        print_success "claude-lane installed successfully!"
+        echo ""
+        echo "Next steps:"
+        echo "1. Edit your configuration: $CONFIG_DIR/config.yaml"
+        echo "2. Store your API keys:"
+        echo "   claude-lane set-key official-api sk-ant-api03-..."
+        echo "   claude-lane set-key proxy your-proxy-key"
+        echo "3. Switch between endpoints:"
+        echo "   claude-lane official-api"
+        echo "   claude-lane proxy"
+        echo ""
+        echo "For help: claude-lane help"
+    fi
     echo "Documentation: https://github.com/Ted151951/claude-lane"
 }
 
 main() {
     echo "🚀 claude-lane Installation Script"
     echo "=================================="
+    
+    # Check for existing installation first
+    check_existing_installation
     
     # Detect platform
     local platform="$(detect_platform)"

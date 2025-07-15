@@ -2,9 +2,11 @@
 
 <div align="center">
 
-## 🔐 Claude API密钥明文存储太危险！用claude-lane加密保护
+## ⚡ 多个Claude API一键切换，密钥密文存储防泄漏
 
-**claude-lane** 让你的Claude API密钥享受银行级系统加密保护，彻底告别配置文件明文存储！
+**🔒 密钥系统级硬件加密存储，永不明文泄露**
+
+`官方API` → `代理服务` → `私有部署` 随意切换，配置一次终身使用
 
 🔒 **Windows DPAPI** • **macOS Keychain** • **Linux Secret Service**
 
@@ -12,21 +14,21 @@
 
 ---
 
-## 🆚 一目了然的差异
+## 🆚 为什么选择claude-lane？
 
-| 传统工具 | claude-lane |
-|---------|-------------|
-| ❌ 明文存储密钥 | ✅ 系统级硬件加密 |
-| ❌ 配置文件可见 | ✅ 零明文存储 |
-| ❌ 易被恶意软件窃取 | ✅ 用户级权限保护 |
-| ❌ 误传GitHub泄露 | ✅ 即使系统入侵也安全 |
+| 痛点场景 | 传统做法 | claude-lane解决方案 |
+|---------|---------|------------------|
+| **多API切换** | ❌ 手动修改配置文件 | ✅ `claude-lane official-api` 一键切换 |
+| **密钥管理** | ❌ 明文写在配置里 | ✅ 系统级硬件加密存储 |
+| **误传泄露** | ❌ 一不小心传GitHub完蛋 | ✅ 配置文件无任何敏感信息 |
+| **环境隔离** | ❌ 不同项目混用密钥 | ✅ 一键设置项目专用环境 |
 
-## ⚡ 核心功能
+## 🚀 强大功能
 
-- **🔄 一键切换**: `claude-lane official-api` 瞬间切换端点
-- **🌍 跨平台统一**: Windows、macOS、Linux 完全相同体验
-- **🔄 智能回退**: 无配置时自动使用Claude Code网页登录  
-- **⚙️ 灵活配置**: 支持官方、代理、私有部署等任意端点
+- **⚡ 瞬间切换**: `claude-lane proxy` → `claude-lane official-api` 秒级切换API
+- **🔒 军用加密**: Windows DPAPI、macOS Keychain、Linux Secret Service硬件级保护
+- **🎯 智能模式**: 无配置自动web登录，有配置自动加密调用
+- **🌍 全平台**: Windows、macOS、Linux完全相同命令和体验
 
 ---
 
@@ -113,21 +115,20 @@ claude-lane set-key official-api sk-ant-api03-你的官方密钥
 claude-lane set-key proxy 你的代理密钥
 ```
 
-3. **开始安全对话**:
+3. **体验极速切换**:
 ```bash
-# 无配置模式（Claude网页登录）
-claude-lane "你好，今天天气怎么样？"
+# 🚀 一键切换API，享受安全对话
+claude-lane official-api "用官方API写首诗"
+claude-lane proxy "用代理API翻译文字"  
+claude-lane kimi "用Kimi API回答问题"
 
-# API密钥模式（安全加密）
-claude-lane official-api "写一首诗"
-claude-lane proxy "翻译这段文字"
+# 💨 更快的切换方式
+claude-lane proxy              # 切换到代理并进入交互模式
+claude-lane official-api       # 切换回官方API
 
-# 交互模式
-claude-lane                    # 智能选择最佳方式
-claude-lane official-api       # 使用加密存储的API密钥
-
-# 环境变量模式
-claude-lane --env-only official-api  # 仅设置环境变量
+# 🔧 高级用法  
+claude-lane --env-only proxy   # 只设置环境变量，不启动对话
+claude-lane status             # 查看所有API状态和密钥状况
 ```
 
 ## 命令说明
