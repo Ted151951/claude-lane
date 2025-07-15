@@ -37,7 +37,7 @@
 ### 🔧 必需组件
 - **[Claude CLI](https://github.com/anthropics/claude-cli)** - Anthropic官方命令行工具
   ```bash
-  npm install -g @anthropic-ai/claude-cli
+  npm install -g @anthropic-ai/claude-code
   ```
 
 ### 🛠️ 系统要求
