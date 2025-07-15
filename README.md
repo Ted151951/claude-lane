@@ -4,75 +4,54 @@
 
 ## 🔐 终于有一个不会泄露你API密钥的Claude切换工具了
 
-**你的API密钥价值连城，为什么要把它们明文保存在配置文件里？**
+**claude-lane** 使用系统级硬件加密保护你的API密钥，告别明文存储的安全隐患！
 
-**claude-lane** 使用军用级系统原生加密技术，让你的API密钥获得与银行账户密码相同级别的保护。
+🔒 **Windows DPAPI** • **macOS Keychain** • **Linux Secret Service**
 
 </div>
 
 ---
 
-## 💡 为什么选择 claude-lane？
+## 🆚 一目了然的差异
 
-### 🚨 其他工具的致命问题
-- ❌ **配置文件明文存储** - 任何人都能看到你的API密钥
-- ❌ **简单Base64编码** - 10秒就能破解
-- ❌ **文本文件保存** - 误传GitHub直接泄露
-- ❌ **无权限控制** - 恶意软件轻松窃取
+| 传统工具 | claude-lane |
+|---------|-------------|
+| ❌ 明文存储密钥 | ✅ 系统级硬件加密 |
+| ❌ 配置文件可见 | ✅ 零明文存储 |
+| ❌ 易被恶意软件窃取 | ✅ 用户级权限保护 |
+| ❌ 误传GitHub泄露 | ✅ 即使系统入侵也安全 |
 
-### ✅ claude-lane的安全革命
-- 🔒 **系统级硬件加密**: 
-  - Windows DPAPI（企业级数据保护）
-  - macOS Keychain（苹果安全架构）  
-  - Linux Secret Service（开源安全标准）
-- 🛡️ **零明文存储**: 密钥永远不会以可读形式出现
-- 🔐 **用户级权限**: 只有你的账户才能解密
-- 💎 **防窃取设计**: 即使系统被入侵，密钥依然安全
+## ⚡ 核心功能
 
----
-
-## ⚡ 强大功能，极简使用
-
-- ↔️ **一键切换**: `claude-lane official` 瞬间切换到官方API
-- 🌍 **全平台统一**: Windows、macOS、Linux 完全相同的体验  
-- 🔄 **智能回退**: 无配置时自动使用 Claude 网页登录
-- ⚙️ **灵活配置**: 支持官方、代理、私有部署等任意端点
+- **🔄 一键切换**: `claude-lane official-api` 瞬间切换端点
+- **🌍 跨平台统一**: Windows、macOS、Linux 完全相同体验
+- **🔄 智能回退**: 无配置时自动使用Claude网页登录  
+- **⚙️ 灵活配置**: 支持官方、代理、私有部署等任意端点
 
 ---
 
-## 🎯 安全性对比演示
+## 📋 使用前提
 
-### 😱 传统工具的可怕现实
-```yaml
-# ~/.config/other-tools/config.yaml
-api_key: "sk-ant-api03-your-precious-key-here"  # 😱 明文可见！
-```
-**任何人都能看到你的密钥！** 文件分享、GitHub提交、恶意软件扫描...一不小心就全完了。
+使用 claude-lane 之前，请确保已安装以下工具：
 
-### 😎 claude-lane的安全堡垒
-```yaml
-# ~/.claude/config.yaml  
-endpoints:
-  official-api:
-    base_url: "https://api.anthropic.com"
-    # 🔒 密钥安全存储在系统密钥库中，配置文件中看不到任何敏感信息
-```
+### 🔧 必需组件
+- **[Claude CLI](https://github.com/anthropics/claude-cli)** - Anthropic官方命令行工具
+  ```bash
+  npm install -g @anthropic-ai/claude-cli
+  ```
 
-```bash
-# 尝试查看存储的密钥
-$ cat ~/.claude/config.yaml
-# 😎 完全看不到API密钥！
+### 🛠️ 系统要求
+- **Windows**: PowerShell 5.0+ / Windows 10+
+- **macOS**: macOS 10.13+ / Bash或Zsh
+- **Linux**: Ubuntu 18.04+ / Bash 4.0+
 
-$ claude-lane status
-# ✅ [OK] official-api (has key) 
-# 😎 工具知道密钥存在，但不暴露内容！
-```
-
-**这就是专业级安全的差距！**
+### 🌐 网络要求
+- 安装时需要访问GitHub（下载脚本和文件）
+- 使用时需要访问相应的API端点
 
 ---
 
-## 🚀 立即开始安全之旅
+## 🚀 快速安装
 
 ### 📦 一键安装
 
@@ -98,19 +77,35 @@ curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.
 **⚠️ v1.2.0+ 重要变更：** `official` 配置已重命名为 `official-api`  
 详细升级指南请参考：[UPGRADE.md](./UPGRADE.md)
 
-### ⚡ 三步极简配置
+### ⚡ 两步极简配置
 
-1. **创建安全配置** (`~/.claude/config.yaml`):
-```yaml
-endpoints:
-  official-api:
-    base_url: "https://api.anthropic.com"
-    # 🔒 不需要key_ref - 直接使用profile名称
-  
-  proxy:
-    base_url: "https://your-proxy.example.com/v1"
-    # 🔒 密钥将安全存储在系统密钥库中
-```
+1. **创建配置文件** - 从模板复制或手动创建
+
+   **方法一：复制模板（推荐）**
+   ```bash
+   # 安装后会在这里找到模板
+   # Windows: C:\Users\你的用户名\.claude\scripts\windows\..\..\templates\config.yaml
+   # Linux/macOS: ~/.claude/scripts/*/templates/config.yaml
+   
+   # 复制到配置目录
+   cp ~/.claude/scripts/*/templates/config.yaml ~/.claude/config.yaml
+   ```
+
+   **方法二：手动创建 `~/.claude/config.yaml`**
+   ```yaml
+   endpoints:
+     official-api:
+       base_url: "https://api.anthropic.com"
+     
+     proxy:
+       base_url: "https://your-proxy.example.com/v1"
+     
+     kimi:
+       base_url: "https://api.moonshot.cn/anthropic"
+   ```
+   > 💡 配置文件位置：
+   > - **Windows**: `C:\Users\你的用户名\.claude\config.yaml`
+   > - **Linux/macOS**: `~/.claude/config.yaml`
 
 2. **密钥安全入库**（永远不会明文保存）:
 ```bash
