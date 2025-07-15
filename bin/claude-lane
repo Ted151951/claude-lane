@@ -61,15 +61,29 @@ detect_platform() {
 
 get_keystore_script() {
     local platform="$1"
+    
+    # Try installed location first, then project location
     case "$platform" in
         windows)
-            echo "$PROJECT_ROOT/scripts/windows/keystore.ps1"
+            if [[ -f "$HOME/.claude/scripts/windows/keystore.ps1" ]]; then
+                echo "$HOME/.claude/scripts/windows/keystore.ps1"
+            else
+                echo "$PROJECT_ROOT/scripts/windows/keystore.ps1"
+            fi
             ;;
         macos)
-            echo "$PROJECT_ROOT/scripts/macos/keystore.sh"
+            if [[ -f "$HOME/.claude/scripts/macos/keystore.sh" ]]; then
+                echo "$HOME/.claude/scripts/macos/keystore.sh"
+            else
+                echo "$PROJECT_ROOT/scripts/macos/keystore.sh"
+            fi
             ;;
         linux)
-            echo "$PROJECT_ROOT/scripts/linux/keystore.sh"
+            if [[ -f "$HOME/.claude/scripts/linux/keystore.sh" ]]; then
+                echo "$HOME/.claude/scripts/linux/keystore.sh"
+            else
+                echo "$PROJECT_ROOT/scripts/linux/keystore.sh"
+            fi
             ;;
         *)
             echo "Error: Unsupported platform: $platform" >&2
