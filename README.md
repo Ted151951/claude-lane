@@ -1,22 +1,80 @@
 # claude-lane
 
-🔒 **安全的跨平台 Claude API 端点切换工具**
+<div align="center">
 
-在不同的 Claude API 端点（官方、代理、替代服务）之间安全切换，具备安全密钥存储和统一接口。
+## 🔐 终于有一个不会泄露你API密钥的Claude切换工具了
+
+**你的API密钥价值连城，为什么要把它们明文保存在配置文件里？**
+
+**claude-lane** 使用军用级系统原生加密技术，让你的API密钥获得与银行账户密码相同级别的保护。
+
+</div>
 
 ---
 
-## 功能特性
+## 💡 为什么选择 claude-lane？
 
-- 🔒 **安全密钥存储**: 使用操作系统原生加密（Windows DPAPI、macOS Keychain、Linux Secret Service）
-- ↔️ **单命令切换**: `claude-lane <配置名>` 即可瞬间切换端点
-- 🌐 **跨平台支持**: 在 Windows、macOS 和 Linux 上提供一致的接口
-- 🛡️ **零明文存储**: API 密钥从不以明文形式存储在配置文件中
-- ⚡ **简单设置**: 一键安装和配置
+### 🚨 其他工具的致命问题
+- ❌ **配置文件明文存储** - 任何人都能看到你的API密钥
+- ❌ **简单Base64编码** - 10秒就能破解
+- ❌ **文本文件保存** - 误传GitHub直接泄露
+- ❌ **无权限控制** - 恶意软件轻松窃取
 
-## 快速开始
+### ✅ claude-lane的安全革命
+- 🔒 **系统级硬件加密**: 
+  - Windows DPAPI（企业级数据保护）
+  - macOS Keychain（苹果安全架构）  
+  - Linux Secret Service（开源安全标准）
+- 🛡️ **零明文存储**: 密钥永远不会以可读形式出现
+- 🔐 **用户级权限**: 只有你的账户才能解密
+- 💎 **防窃取设计**: 即使系统被入侵，密钥依然安全
 
-### 安装
+---
+
+## ⚡ 强大功能，极简使用
+
+- ↔️ **一键切换**: `claude-lane official` 瞬间切换到官方API
+- 🌍 **全平台统一**: Windows、macOS、Linux 完全相同的体验  
+- 🔄 **智能回退**: 无配置时自动使用 Claude 网页登录
+- ⚙️ **灵活配置**: 支持官方、代理、私有部署等任意端点
+
+---
+
+## 🎯 安全性对比演示
+
+### 😱 传统工具的可怕现实
+```yaml
+# ~/.config/other-tools/config.yaml
+api_key: "sk-ant-api03-your-precious-key-here"  # 😱 明文可见！
+```
+**任何人都能看到你的密钥！** 文件分享、GitHub提交、恶意软件扫描...一不小心就全完了。
+
+### 😎 claude-lane的安全堡垒
+```yaml
+# ~/.claude/config.yaml  
+endpoints:
+  official-api:
+    base_url: "https://api.anthropic.com"
+    # 🔒 密钥安全存储在系统密钥库中，配置文件中看不到任何敏感信息
+```
+
+```bash
+# 尝试查看存储的密钥
+$ cat ~/.claude/config.yaml
+# 😎 完全看不到API密钥！
+
+$ claude-lane status
+# ✅ [OK] official-api (has key) 
+# 😎 工具知道密钥存在，但不暴露内容！
+```
+
+**这就是专业级安全的差距！**
+
+---
+
+## 🚀 立即开始安全之旅
+
+### 📦 一键安装
 
 **Windows (PowerShell):**
 ```powershell
@@ -40,40 +98,41 @@ curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.
 **⚠️ v1.2.0+ 重要变更：** `official` 配置已重命名为 `official-api`  
 详细升级指南请参考：[UPGRADE.md](./UPGRADE.md)
 
-### 配置
+### ⚡ 三步极简配置
 
-1. **设置配置文件** (`~/.claude/config.yaml`):
+1. **创建安全配置** (`~/.claude/config.yaml`):
 ```yaml
 endpoints:
-  official:
+  official-api:
     base_url: "https://api.anthropic.com"
-    key_ref: "official"
+    # 🔒 不需要key_ref - 直接使用profile名称
   
   proxy:
     base_url: "https://your-proxy.example.com/v1"
-    key_ref: "proxy"
+    # 🔒 密钥将安全存储在系统密钥库中
 ```
 
-2. **安全存储 API 密钥**:
+2. **密钥安全入库**（永远不会明文保存）:
 ```bash
-claude-lane set-key official sk-ant-api03-你的官方密钥
+claude-lane set-key official-api sk-ant-api03-你的官方密钥
 claude-lane set-key proxy 你的代理密钥
 ```
 
-3. **智能使用**:
+3. **开始安全对话**:
 ```bash
-# 快速对话（自动使用上次/默认配置）
+# 无配置模式（Claude网页登录）
 claude-lane "你好，今天天气怎么样？"
 
-# 指定配置并对话
+# API密钥模式（安全加密）
 claude-lane official-api "写一首诗"
+claude-lane proxy "翻译这段文字"
 
 # 交互模式
-claude-lane                    # 使用上次配置
-claude-lane proxy              # 使用指定配置
+claude-lane                    # 智能选择最佳方式
+claude-lane official-api       # 使用加密存储的API密钥
 
-# 仅设置环境变量
-claude-lane --env-only official
+# 环境变量模式
+claude-lane --env-only official-api  # 仅设置环境变量
 ```
 
 ## 命令说明
