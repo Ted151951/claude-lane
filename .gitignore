@@ -60,3 +60,9 @@ prompt.md
 *.prompt.md
 design-docs/
 internal-docs/
+
+# Testing documents (development only)
+TESTING.md
+testing/
+test-reports/
+*.testing.md
