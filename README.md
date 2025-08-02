@@ -8,6 +8,11 @@
 
 `官方API` → `代理服务` → `私有部署` 随意切换，配置一次终身使用
 
+### 🔥 热门AI模型支持
+- **Kimi K2** → `claude-lane kimi`
+- **Qwen3-Coder** → `claude-lane qwen` 
+- **GLM-4.5** → `claude-lane glm`
+
 🔒 **Windows DPAPI** • **macOS Keychain** • **Linux Secret Service**
 
 </div>
@@ -104,6 +109,12 @@ curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.
      
      kimi:
        base_url: "https://api.moonshot.cn/anthropic"
+     
+     qwen:
+       base_url: "https://dashscope-intl.aliyuncs.com/api/v2/apps/claude-code-proxy"
+     
+     glm:
+       base_url: "https://open.bigmodel.cn/api/anthropic"
    ```
    > 💡 配置文件位置：
    > - **Windows**: `C:\Users\你的用户名\.claude\config.yaml`
@@ -113,6 +124,9 @@ curl -fsSL https://raw.githubusercontent.com/Ted151951/claude-lane/main/install.
 ```bash
 claude-lane set-key official-api sk-ant-api03-你的官方密钥
 claude-lane set-key proxy 你的代理密钥
+claude-lane set-key kimi 你的Kimi密钥
+claude-lane set-key qwen 你的Qwen密钥
+claude-lane set-key glm 你的GLM密钥
 ```
 
 3. **体验极速切换**:
@@ -120,10 +134,14 @@ claude-lane set-key proxy 你的代理密钥
 # 🚀 一键切换API，享受安全对话
 claude-lane official-api "用官方API写首诗"
 claude-lane proxy "用代理API翻译文字"  
-claude-lane kimi "用Kimi API回答问题"
+claude-lane kimi "用Kimi K2回答问题"
+claude-lane qwen "用Qwen3-Coder编程"
+claude-lane glm "用GLM-4.5分析数据"
 
 # 💨 更快的切换方式
-claude-lane proxy              # 切换到代理并进入交互模式
+claude-lane kimi               # 切换到Kimi K2并进入交互模式
+claude-lane qwen               # 切换到Qwen3-Coder
+claude-lane glm                # 切换到GLM-4.5
 claude-lane official-api       # 切换回官方API
 
 # 🔧 高级用法  

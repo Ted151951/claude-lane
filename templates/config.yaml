@@ -7,22 +7,24 @@ endpoints:
   # Official Anthropic API (requires API key)
   official-api:
     base_url: "https://api.anthropic.com"
-    # key_ref not needed - will use "official-api" as key reference
   
   # Example proxy/relay service
   proxy:
     base_url: "https://your-proxy.example.com/v1"
-    # key_ref not needed - will use "proxy" as key reference
-  
+
   # Example alternative service (like Kimi)
   kimi:
     base_url: "https://api.moonshot.cn/anthropic"
-    # key_ref not needed - will use "kimi" as key reference
   
+  qwen:
+    base_url: "https://dashscope-intl.aliyuncs.com/api/v2/apps/claude-code-proxy"
+
+  glm:
+    base_url: "https://open.bigmodel.cn/api/anthropic"
+
   # Local development server
   local:
     base_url: "http://localhost:8080/v1"
-    # key_ref not needed - will use "local" as key reference
 
 # Usage (v1.2.0+):
 # Default behavior (no config needed):
