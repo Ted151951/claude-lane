@@ -103,22 +103,22 @@ check_dependencies() {
             fi
             ;;
         "linux")
-            if ! command -v secret-tool >/dev/null 2>&1; then
-                print_warning "secret-tool not found. Installing libsecret-tools..."
+            if ! command -v keyctl >/dev/null 2>&1; then
+                print_warning "keyctl not found. Installing keyutils..."
                 
-                # Try to install libsecret-tools
+                # Try to install keyutils
                 if command -v apt >/dev/null 2>&1; then
-                    sudo apt update && sudo apt install -y libsecret-tools
+                    sudo apt update && sudo apt install -y keyutils
                 elif command -v dnf >/dev/null 2>&1; then
-                    sudo dnf install -y libsecret
+                    sudo dnf install -y keyutils
                 elif command -v pacman >/dev/null 2>&1; then
-                    sudo pacman -S --noconfirm libsecret
+                    sudo pacman -S --noconfirm keyutils
                 else
-                    print_error "Could not install libsecret-tools automatically."
+                    print_error "Could not install keyutils automatically."
                     print_error "Please install manually:"
-                    print_error "  Ubuntu/Debian: sudo apt install libsecret-tools"
-                    print_error "  Fedora/RHEL:   sudo dnf install libsecret"
-                    print_error "  Arch:          sudo pacman -S libsecret"
+                    print_error "  Ubuntu/Debian: sudo apt install keyutils"
+                    print_error "  Fedora/RHEL:   sudo dnf install keyutils"
+                    print_error "  Arch:          sudo pacman -S keyutils"
                     exit 1
                 fi
             fi

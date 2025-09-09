@@ -178,12 +178,12 @@ claude-lane status             # 查看所有API状态和密钥状况
 - **权限**: 可能会提示允许钥匙串访问
 
 ### Linux
-- **要求**: `libsecret-tools` 包
+- **要求**: `keyutils` 包
 - **安装**:
-  - Ubuntu/Debian: `sudo apt install libsecret-tools`
-  - Fedora/RHEL: `sudo dnf install libsecret`
-  - Arch: `sudo pacman -S libsecret`
-- **密钥存储**: Secret Service API (gnome-keyring、KDE Wallet 等)
+  - Ubuntu/Debian: `sudo apt install keyutils`
+  - Fedora/RHEL: `sudo dnf install keyutils`
+  - Arch: `sudo pacman -S keyutils`
+- **密钥存储**: Linux 内核 keyring（内存存储，CLI 友好）
 
 ## 配置示例
 
@@ -253,14 +253,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 powershell -ExecutionPolicy Bypass -File claude-lane
 ```
 
-### Linux Secret Service 问题
+### Linux 密钥存储问题
 ```bash
-# 安装 libsecret-tools
-sudo apt install libsecret-tools  # Ubuntu/Debian
-sudo dnf install libsecret        # Fedora/RHEL
+# 安装 keyutils
+sudo apt install keyutils  # Ubuntu/Debian
+sudo dnf install keyutils        # Fedora/RHEL
 
-# 检查 secret service 是否运行
-systemctl --user status gnome-keyring-daemon
+# 测试 keyctl 功能
+keyctl show @u
 ```
 
 ### macOS Keychain 访问
@@ -415,12 +415,12 @@ claude-lane --env-only official
 - **Permissions**: You may be prompted to allow keychain access
 
 ### Linux
-- **Requirements**: `libsecret-tools` package
+- **Requirements**: `keyutils` package
 - **Installation**:
-  - Ubuntu/Debian: `sudo apt install libsecret-tools`
-  - Fedora/RHEL: `sudo dnf install libsecret`
-  - Arch: `sudo pacman -S libsecret`
-- **Key Storage**: Secret Service API (gnome-keyring, KDE Wallet, etc.)
+  - Ubuntu/Debian: `sudo apt install keyutils`
+  - Fedora/RHEL: `sudo dnf install keyutils`
+  - Arch: `sudo pacman -S keyutils`
+- **Key Storage**: Linux kernel keyring (in-memory storage, CLI-friendly)
 
 ## Configuration Examples
 
@@ -490,14 +490,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 powershell -ExecutionPolicy Bypass -File claude-lane
 ```
 
-### Linux Secret Service Issues
+### Linux Key Storage Issues
 ```bash
-# Install libsecret-tools
-sudo apt install libsecret-tools  # Ubuntu/Debian
-sudo dnf install libsecret        # Fedora/RHEL
+# Install keyutils
+sudo apt install keyutils  # Ubuntu/Debian
+sudo dnf install keyutils        # Fedora/RHEL
 
-# Check if secret service is running
-systemctl --user status gnome-keyring-daemon
+# Test keyctl functionality
+keyctl show @u
 ```
 
 ### macOS Keychain Access
