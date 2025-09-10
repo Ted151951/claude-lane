@@ -131,6 +131,149 @@ get_last_profile() {
     fi
 }
 
+# ============================================================================
+# ProfileManager - Core abstraction layer for profile management
+# ============================================================================
+
+# Profile data structure (represented as pipe-separated string):
+# format: "name|base_url|key_ref|has_key"
+# example: "proxy|https://api.proxy.com|proxy|true"
+
+# Create a profile object from configuration
+create_profile() {
+    local profile_name="$1"
+    
+    if [[ -z "$profile_name" ]]; then
+        echo "Error: Profile name required" >&2
+        return 1
+    fi
+    
+    # Check if config file exists
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "Error: Configuration file not found: $CONFIG_FILE" >&2
+        return 1
+    fi
+    
+    # Parse configuration using existing parse_yaml function
+    local config_data base_url key_ref
+    if ! config_data="$(parse_yaml "$CONFIG_FILE" "$profile_name")"; then
+        echo "Error: Profile '$profile_name' not found in configuration" >&2
+        return 1
+    fi
+    
+    base_url="$(echo "$config_data" | cut -d'|' -f1)"
+    key_ref="$(echo "$config_data" | cut -d'|' -f2)"
+    
+    # Validate configuration
+    if [[ -z "$base_url" ]]; then
+        echo "Error: Profile '$profile_name' missing base_url in configuration" >&2
+        return 1
+    fi
+    
+    # Use profile name as key_ref if not specified
+    if [[ -z "$key_ref" ]]; then
+        key_ref="$profile_name"
+    fi
+    
+    # Check if API key exists
+    local has_key="false"
+    if call_keystore get "$key_ref" >/dev/null 2>&1; then
+        has_key="true"
+    fi
+    
+    # Return profile object
+    echo "$profile_name|$base_url|$key_ref|$has_key"
+}
+
+# Get profile by name
+get_profile() {
+    local profile_name="$1"
+    create_profile "$profile_name"
+}
+
+# Get all available profiles from configuration
+list_all_profiles() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        return 0
+    fi
+    
+    local in_endpoints=false
+    local profile_names=()
+    
+    while IFS= read -r line; do
+        local trimmed="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+        if [[ "$trimmed" == "endpoints:" ]]; then
+            in_endpoints=true
+            continue
+        fi
+        
+        if [[ "$in_endpoints" == true && "$line" =~ ^[[:space:]]{2}([a-zA-Z0-9_-]+):$ ]]; then
+            local profile_name="${BASH_REMATCH[1]}"
+            profile_names+=("$profile_name")
+        fi
+    done < "$CONFIG_FILE"
+    
+    # Create profile objects for each found profile
+    for profile_name in "${profile_names[@]}"; do
+        if create_profile "$profile_name" 2>/dev/null; then
+            # Profile creation successful, already printed
+            :
+        else
+            # Profile creation failed, create minimal profile for display
+            echo "$profile_name|||false"
+        fi
+    done
+}
+
+# Get profiles that have API keys
+list_profiles_with_keys() {
+    list_all_profiles | while IFS='|' read -r name base_url key_ref has_key; do
+        if [[ "$has_key" == "true" ]]; then
+            echo "$name|$base_url|$key_ref|$has_key"
+        fi
+    done
+}
+
+# Check if profile has API key
+profile_has_key() {
+    local profile_name="$1"
+    local profile_info
+    
+    if profile_info="$(get_profile "$profile_name")"; then
+        local has_key="$(echo "$profile_info" | cut -d'|' -f4)"
+        [[ "$has_key" == "true" ]]
+    else
+        return 1
+    fi
+}
+
+# Get API key for profile
+get_profile_api_key() {
+    local profile_name="$1"
+    local profile_info key_ref
+    
+    if ! profile_info="$(get_profile "$profile_name")"; then
+        return 1
+    fi
+    
+    key_ref="$(echo "$profile_info" | cut -d'|' -f3)"
+    call_keystore get "$key_ref"
+}
+
+# Helper function to extract field from profile object
+profile_get_field() {
+    local profile_info="$1"
+    local field="$2"
+    
+    case "$field" in
+        "name") echo "$profile_info" | cut -d'|' -f1 ;;
+        "base_url") echo "$profile_info" | cut -d'|' -f2 ;;
+        "key_ref") echo "$profile_info" | cut -d'|' -f3 ;;
+        "has_key") echo "$profile_info" | cut -d'|' -f4 ;;
+        *) echo "Error: Unknown field '$field'" >&2; return 1 ;;
+    esac
+}
+
 get_current_profile() {
     # Try to determine current profile from environment or last used
     if [[ -n "${CLAUDE_LANE_PROFILE:-}" ]]; then
@@ -253,10 +396,10 @@ use_web_login() {
 }
 
 use_profile() {
-    local profile="$1"
+    local profile_name="$1"
     shift # Remove profile from arguments, rest are claude arguments
     
-    if [[ -z "$profile" ]]; then
+    if [[ -z "$profile_name" ]]; then
         echo "Error: Profile name required" >&2
         show_usage
         exit 1
@@ -270,17 +413,29 @@ use_profile() {
         return
     fi
     
-    # Parse configuration
-    local config_data="$(parse_yaml "$CONFIG_FILE" "$profile")"
-    local base_url="$(echo "$config_data" | cut -d'|' -f1)"
-    local key_ref="$(echo "$config_data" | cut -d'|' -f2)"
+    # Get profile using ProfileManager
+    local profile_info
+    if ! profile_info="$(get_profile "$profile_name")"; then
+        echo "Error: Profile '$profile_name' not found or invalid" >&2
+        exit 1
+    fi
     
-    # Retrieve API key
-    local api_key
-    if ! api_key="$(call_keystore get "$key_ref" 2>/dev/null)"; then
-        # API key not found - handle interactively
-        handle_missing_key "$profile" "$base_url" "$key_ref" "$@"
+    # Extract profile fields
+    local base_url="$(profile_get_field "$profile_info" "base_url")"
+    local key_ref="$(profile_get_field "$profile_info" "key_ref")"
+    local has_key="$(profile_get_field "$profile_info" "has_key")"
+    
+    # Handle missing API key
+    if [[ "$has_key" != "true" ]]; then
+        handle_missing_key "$profile_name" "$base_url" "$key_ref" "$@"
         return $?
+    fi
+    
+    # Get API key
+    local api_key
+    if ! api_key="$(get_profile_api_key "$profile_name")"; then
+        echo "Error: Failed to retrieve API key for '$profile_name'" >&2
+        exit 1
     fi
     
     # Set environment variables for Claude Code
@@ -361,46 +516,8 @@ validate_api_key() {
 
 # Get profiles that have stored API keys
 get_profiles_with_keys() {
-    if [[ ! -f "$CONFIG_FILE" ]]; then
-        return
-    fi
-    
-    local in_endpoints=false
-    local profile_names=()
-    
-    while IFS= read -r line; do
-        local trimmed="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-        if [[ "$trimmed" == "endpoints:" ]]; then
-            in_endpoints=true
-            continue
-        fi
-        
-        if [[ "$in_endpoints" == true && "$line" =~ ^[[:space:]]{2}([a-zA-Z0-9_-]+): ]]; then
-            local profile_name="${BASH_REMATCH[1]}"
-            profile_names+=("$profile_name")
-        fi
-    done < "$CONFIG_FILE"
-    
-    # Check which profiles have keys
-    local profiles_with_keys=()
-    for profile_name in "${profile_names[@]}"; do
-        local config_data=""
-        local key_ref=""
-        
-        if config_data="$(parse_yaml "$CONFIG_FILE" "$profile_name" 2>/dev/null)"; then
-            key_ref="$(echo "$config_data" | cut -d'|' -f2)"
-        fi
-        
-        if [[ -z "$key_ref" ]]; then
-            key_ref="$profile_name"
-        fi
-        
-        if call_keystore get "$key_ref" >/dev/null 2>&1; then
-            profiles_with_keys+=("$profile_name")
-        fi
-    done
-    
-    printf '%s\n' "${profiles_with_keys[@]}"
+    # Use ProfileManager to get profiles with keys, return only profile names
+    list_profiles_with_keys | cut -d'|' -f1
 }
 
 # Interactive menu when API key is missing
@@ -538,47 +655,13 @@ list_profiles_and_keys() {
         return
     fi
     
-    # Parse profiles from config file
-    local in_endpoints=false
-    local profile_names=()
-    
-    while IFS= read -r line; do
-        local trimmed="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-        if [[ "$trimmed" == "endpoints:" ]]; then
-            in_endpoints=true
-            continue
-        fi
+    # Use ProfileManager to get all profiles
+    while IFS='|' read -r profile_name base_url key_ref has_key; do
+        # Skip empty lines
+        [[ -z "$profile_name" ]] && continue
         
-        if [[ "$in_endpoints" == true && "$line" =~ ^[[:space:]]{2}([a-zA-Z0-9_-]+): ]]; then
-            local profile_name="${BASH_REMATCH[1]}"
-            profile_names+=("$profile_name")
-        fi
-    done < "$CONFIG_FILE"
-    
-    # For each profile, check if it has a key
-    for profile_name in "${profile_names[@]}"; do
-        # Parse the profile to get its key_ref
-        local config_data=""
-        local key_ref=""
-        
-        if config_data="$(parse_yaml "$CONFIG_FILE" "$profile_name" 2>/dev/null)"; then
-            key_ref="$(echo "$config_data" | cut -d'|' -f2)"
-        fi
-        
-        # If no key_ref from config, use profile name as default
-        if [[ -z "$key_ref" ]]; then
-            key_ref="$profile_name"
-        fi
-        
-        # Check if the key exists
-        local has_key=false
-        if [[ -n "$key_ref" ]] && call_keystore get "$key_ref" >/dev/null 2>&1; then
-            has_key=true
-        fi
-        
-        local status_icon=""
-        local status_text=""
-        if [[ "$has_key" == true ]]; then
+        local status_icon status_text
+        if [[ "$has_key" == "true" ]]; then
             status_icon="[OK]"
             status_text="has key"
         else
@@ -588,10 +671,10 @@ list_profiles_and_keys() {
         
         echo "  $status_icon $profile_name ($status_text)"
         
-        if [[ "$has_key" == false && -n "$key_ref" ]]; then
+        if [[ "$has_key" != "true" && -n "$key_ref" ]]; then
             echo "      To add key: claude-lane set-key $key_ref sk-your-api-key"
         fi
-    done
+    done < <(list_all_profiles)
     
     echo ""
     echo "=== Usage ==="

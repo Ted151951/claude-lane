@@ -8,7 +8,25 @@
       "Bash(cat:*)",
       "Bash(powershell.exe:*)",
       "Bash(mv:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(command:*)",
+      "Bash(echo:*)",
+      "Bash(systemctl:*)",
+      "WebSearch",
+      "Bash(/home/mr/claude-lane/scripts/linux/keystore.sh list:*)",
+      "Bash(/home/mr/claude-lane/scripts/linux/keystore.sh get:*)",
+      "Bash(/home/mr/claude-lane/bin/claude-lane list)",
+      "Bash(/home/mr/claude-lane/scripts/linux/keystore.sh delete:*)",
+      "Bash(git merge:*)",
+      "Read(//home/mr/.claude/**)",
+      "Bash(bash:*)",
+      "Bash(claude-lane list)",
+      "Bash(claude-lane:*)",
+      "Bash(~/.claude/scripts/linux/keystore.sh get:*)",
+      "Bash(/home/mr/claude-lane/scripts/linux/keystore.sh set:*)",
+      "Bash(keyctl:*)",
+      "Read(//home/mr/.cache/claude-lane/keys/**)",
+      "Read(//etc/**)"
     ],
     "deny": []
   }
